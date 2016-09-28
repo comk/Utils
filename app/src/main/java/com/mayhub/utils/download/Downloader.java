@@ -4,6 +4,7 @@ import android.os.Build;
 import android.os.Process;
 import android.text.TextUtils;
 
+import com.mayhub.utils.common.MLogUtil;
 import com.mayhub.utils.common.NetUtil;
 
 import java.io.File;
@@ -98,7 +99,7 @@ public abstract class Downloader extends Thread {
 
     public abstract void threadEnd(String threadName);
 
-    void addRequestHeaders(HttpURLConnection httpURLConnection) {
+    void addRequestHeaders(HttpURLConnection httpURLConnection, boolean isKeepAlive) {
         httpURLConnection.addRequestProperty("Accept", "image/gif, image/jpeg, image/pjpeg, image/pjpeg," +
                 "application/x-shockwave-flash, application/xaml+xml," +
                 "application/vnd.ms-xpsdocument, application/x-ms-xbap," +
@@ -106,13 +107,16 @@ public abstract class Downloader extends Thread {
                 "application/vnd.ms-powerpoint, application/msword, */*");
         httpURLConnection.addRequestProperty("Accept-Ranges", "bytes");
         httpURLConnection.addRequestProperty("Charset", "UTF-8");
-        httpURLConnection.addRequestProperty("Connection", "Keep-Alive");
-        httpURLConnection.addRequestProperty("Accept-Encoding", "");
+        if(isKeepAlive){
+            httpURLConnection.addRequestProperty("Connection", "Keep-Alive");
+        }else if (Build.VERSION.SDK_INT > 13) {
+            httpURLConnection.setRequestProperty("Connection", "close");
+        }
+        httpURLConnection.addRequestProperty("Accept-Encoding", "identity");
         httpURLConnection.addRequestProperty("Range", "bytes=" + 0 + "-");
         if (!httpURLConnection.getRequestProperties().containsKey("User-Agent")) {
             httpURLConnection.addRequestProperty("User-Agent", DEFAULT_USER_AGENT);
         }
-
     }
 
     private boolean blockMobile(){
@@ -135,7 +139,8 @@ public abstract class Downloader extends Thread {
             conn.setInstanceFollowRedirects(false);
             conn.setConnectTimeout(DEFAULT_TIMEOUT);
             conn.setReadTimeout(DEFAULT_TIMEOUT);
-            addRequestHeaders(conn);
+
+            addRequestHeaders(conn, true);
             if(isInterrupted() || downloadTask.isCancel()){
                 taskCancel();
                 return;
@@ -168,7 +173,7 @@ public abstract class Downloader extends Thread {
                     }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            MLogUtil.p(e);
             downloadError(downloadTask);
             if (downloadTask.getDownloadListener() != null) {
                 downloadTask.getDownloadListener().onError(downloadTask.getTag(), 0, e == null ? "" : e.getMessage(), null, downloadTask.getDownloadUrl(), downloadTask.getCurrentIndex(), downloadTask.getTotal());
@@ -255,6 +260,7 @@ public abstract class Downloader extends Thread {
             }
             threadEnd(getName());
         }catch (Exception ex){
+            MLogUtil.p(ex);
             threadError(downloadTask, getName());
         }
     }

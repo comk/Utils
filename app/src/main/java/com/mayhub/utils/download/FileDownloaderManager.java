@@ -18,6 +18,7 @@ public class FileDownloaderManager {
     public final static int DOWNLOAD_STATUS_UNKNOWN = 0x106;
     private static final ConcurrentHashMap<String,FileDownloaderManager> INSTANCE_CONTAINER = new ConcurrentHashMap<>(16);
     private final ConcurrentHashMap<Object,Integer> TASK_STATUS_CACHE = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Object,Integer> TASK_PROGRESS_CACHE = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Object,DownloadTask> downloadAllTasks = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String,Thread> THREAD_INSTANCE_CONTAINER = new ConcurrentHashMap<>(16);
     private final LinkedBlockingDeque<DownloadTask> downloadTasks = new LinkedBlockingDeque<>();
@@ -37,11 +38,12 @@ public class FileDownloaderManager {
         @Override
         public void downloadFinish(DownloadTask downloadTask1) {
             synchronized (lock) {
+                cacheDownloadStatus(downloadTask1, DOWNLOAD_STATUS_FINISH);
+                clearDownloadProgress(downloadTask1);
+                downloadingTasks.remove(downloadTask1);
                 if(downloadConf.globalListener != null){
                     downloadConf.globalListener.onFinish(downloadTask1);
                 }
-                cacheDownloadStatus(downloadTask1, DOWNLOAD_STATUS_FINISH);
-                downloadingTasks.remove(downloadTask1);
             }
         }
 
@@ -49,8 +51,9 @@ public class FileDownloaderManager {
         public void downloadProgress(DownloadTask downloadTask1, int progress) {
             synchronized (lock) {
                 cacheDownloadStatus(downloadTask1, DOWNLOAD_STATUS_DOWNLOADING);
+                cacheDownloadStatus(downloadTask1, progress);
                 if (downloadConf.globalListener != null) {
-                    downloadConf.globalListener.onProgress(downloadTask1);
+                    downloadConf.globalListener.onProgress(downloadTask1, progress);
                 }
             }
         }
@@ -66,11 +69,12 @@ public class FileDownloaderManager {
         public void downloadError(DownloadTask downloadTask1) {
             synchronized (lock) {
                 cacheDownloadStatus(downloadTask1, DOWNLOAD_STATUS_ERROR);
+                clearDownloadProgress(downloadTask1);
+                downloadingTasks.remove(downloadTask1);
                 if(downloadConf.globalListener != null){
                     downloadConf.globalListener.onError(downloadTask1);
                 }
-                downloadingTasks.remove(downloadTask1);
-                if (downloadTask1.getProcessTimes() <= downloadConf.maxRetryCount) {
+                if (downloadTask1.getProcessTimes() < downloadConf.maxRetryCount) {
                     downloadTask1.prepareUrlFail();
                     downloadTasks.add(downloadTask1);
                 }
@@ -81,10 +85,11 @@ public class FileDownloaderManager {
         public void downloadCancel(DownloadTask downloadTask1) {
             synchronized (lock) {
                 cacheDownloadStatus(downloadTask1, DOWNLOAD_STATUS_CANCEL);
+                clearDownloadProgress(downloadTask1);
+                downloadingTasks.remove(downloadTask1);
                 if(downloadConf.globalListener != null){
                     downloadConf.globalListener.onFinish(downloadTask1);
                 }
-                downloadingTasks.remove(downloadTask1);
             }
         }
 
@@ -103,7 +108,7 @@ public class FileDownloaderManager {
             synchronized (lock) {
                 downloadingTasks.remove(downloadTask1);
                 THREAD_INSTANCE_CONTAINER.remove(threadName);
-                if (downloadTask1.getProcessTimes() <= downloadConf.maxRetryCount) {
+                if (downloadTask1.getProcessTimes() < downloadConf.maxRetryCount) {
                     downloadTasks.add(downloadTask1);
                 }
             }
@@ -118,7 +123,7 @@ public class FileDownloaderManager {
                     if(!downloadConf.isEnableLocalCheckFirstOnly && downloadConf.isEnableLocalCheckFirst && downloadCacheTasks.size() > 0){
                         startDownloadCacheTask();
                     }else {
-                        INSTANCE_CONTAINER.remove(tag).release();
+                        INSTANCE_CONTAINER.get(tag).release();
                     }
                 }
             }
@@ -130,6 +135,22 @@ public class FileDownloaderManager {
             TASK_STATUS_CACHE.put(downloadTask.getDownloadUrl(), status);
         }else{
             TASK_STATUS_CACHE.put(downloadTask.getTag(), status);
+        }
+    }
+
+    private void cacheDownloadProgress(DownloadTask downloadTask , int progress){
+        if(downloadTask instanceof SingleDownloadTask){
+            TASK_PROGRESS_CACHE.put(downloadTask.getDownloadUrl(), progress);
+        }else{
+            TASK_PROGRESS_CACHE.put(downloadTask.getTag(), progress);
+        }
+    }
+
+    private void clearDownloadProgress(DownloadTask downloadTask){
+        if(downloadTask instanceof SingleDownloadTask){
+            TASK_PROGRESS_CACHE.remove(downloadTask.getDownloadUrl());
+        }else{
+            TASK_PROGRESS_CACHE.remove(downloadTask.getTag());
         }
     }
 
@@ -199,7 +220,7 @@ public class FileDownloaderManager {
         /**
          * 是否在移动网络状态下工作
          */
-        private boolean isWorkUnderMobileInternet = true;
+        private boolean isWorkUnderMobileInternet = false;
 
         /**
          * 下载失败后的尝试次数
@@ -296,8 +317,9 @@ public class FileDownloaderManager {
             return context;
         }
 
-        public void setContext(Context context) {
+        public DownloadConf setContext(Context context) {
             this.context = context;
+            return this;
         }
     }
 
@@ -323,6 +345,10 @@ public class FileDownloaderManager {
     public FileDownloaderManager initDownloadConf(DownloadConf conf){
         downloadConf = conf;
         return this;
+    }
+
+    public DownloadConf getDownloadConf() {
+        return downloadConf;
     }
 
     private DownloadTask getNextDownloadTask(){
