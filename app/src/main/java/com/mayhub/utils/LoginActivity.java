@@ -61,8 +61,11 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
 
+import okhttp3.FormBody;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import static android.Manifest.permission.READ_CONTACTS;
@@ -88,6 +91,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserLoginTask mAuthTask = null;
+
+    private static final String HOST = "http://172.18.1.188/ielts/user/register";
 
     private int index = 0;
 
@@ -148,7 +153,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                startThread();
+//                startThread();
 //                if(index % 2 == 0) {
 //                    View headView = View.inflate(getApplicationContext(), R.layout.layout_list_item_head, null);
 //                    TextView textView = (TextView) headView.findViewById(R.id.tv_head);
@@ -243,6 +248,28 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
         return filename;
     }
+    public static final MediaType JSON
+            = MediaType.parse("application/json; charset=utf-8");
+
+    String postOkhttp(String url) throws IOException {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .retryOnConnectionFailure(false)
+                .build();
+        RequestBody formBody = new FormBody.Builder()
+                .add("info", "fNjkWKIHO+Ti588GcJvhaGf/VeVmzula5xnEBBmXjWfcpTcIZci1ZgM/2w2SO2E47N69uYSu38El0G+tasLRnJghtEetckbqiQawMEgwkSNT1g2Va92NitO071RgCZn9vitlo8/Tm9te5UKIWui3vD1zEJ1awMKjIOkv7u4gQCg0kb+V/PAK288BND9RcdU4c9mjUO6lRG0XH+k9JujXwgLWx2kZ5Y9wa4ojLFmVwV/1FSxfF8yY+lqV6nbUUwHS0lCEnA1G+exqhMPSO+N2Pe9+i5g4K6xZKIajJ+4C2wvg/D2zFKxkKQAD6WLnnwRcxxCezbM/WP0eHdjl5FeTPL3HyJlKvh1UzyfcrjKF/ageCP96CHTMMFlcOMSy5GNDwFEy6yD2x1WXocyJEYlajYvbH1l6LxcAhI9Wa27EO3PnmKToo28S/eg/Bn3OalVS")
+                .add("timestamp", "1475226339994")
+                .build();
+
+        Request request = new Request.Builder()
+                .addHeader("Accept", "application/json; q=0.5")
+                .url(url)
+                .post(formBody)
+                .build();
+        Response response = client.newCall(request).execute();
+        return response.body().string();
+    }
+
+
 
     long runReq(String url) throws IOException {
         Request request = new Request.Builder()
@@ -251,7 +278,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 .url(url)
                 .build();
         OkHttpClient client = new OkHttpClient.Builder()
-                .retryOnConnectionFailure(true)
+                .retryOnConnectionFailure(false)
                 .build();
         Response response = client.newCall(request).execute();
         return response.body().contentLength();
@@ -266,8 +293,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             public void run() {
 
                 try {
-                    long fileSize = runReq("http://dl.tiku.zhan.com/ielts/audio/1324586/078_1_1474425636200_19.m4a");
-                    Log.e("len = ",""+fileSize);
+                    String result = postOkhttp("http://172.19.0.28/ielts/user/register");
+                    Log.e("result = ",result);
+                    return;
                 }catch (Exception e){
                     e.printStackTrace();
                 }

@@ -23,7 +23,7 @@ public class AmplifyPopWindow extends PopupWindow {
 	}
 	
 	public void showViewAtLocation(View parent, int xoffset, int yoffset, Bitmap bitmap, int screenX, int parentWidth){
-		iv.updateView(bitmap, screenX,parentWidth);
+		iv.updateView(bitmap, screenX,parentWidth, 0);
 		if(isShowing()){
 			update(xoffset, yoffset, -1, -1);
 		}else{

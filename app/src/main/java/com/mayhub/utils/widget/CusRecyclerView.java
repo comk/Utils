@@ -14,8 +14,10 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import com.mayhub.utils.R;
 
 
 /**
@@ -35,10 +37,6 @@ public class CusRecyclerView extends RecyclerView {
 
     private int[] location = new int[2];
 
-    private int showY;
-
-    private int textHeight;
-
     private float downEventX;
 
     private TextView lastFocusTextView;
@@ -46,8 +44,6 @@ public class CusRecyclerView extends RecyclerView {
     private float maxRangeX,maxRangeY;
 
     private float downEventY;
-
-    private AmplifyPopWindow pop;
 
     private String selectedWord;
 
@@ -61,10 +57,9 @@ public class CusRecyclerView extends RecyclerView {
 
     public CusRecyclerView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-//        textHeight = UIUtils.getInstance(context).getDP2PX(35);
+        PopView.initHeightWidth(context);
         WIDTH = PopView.WIDTH / 2;
         HEIGHT = PopView.HEIGHT / 2;
-        pop = new AmplifyPopWindow(context);
     }
 
     @Override
@@ -80,6 +75,55 @@ public class CusRecyclerView extends RecyclerView {
         return isIntercept;
     }
 
+
+    PopView popView;
+
+    FrameLayout frameLayoutAmplify;
+
+    private void dismissAmplifyView(){
+        if(popView != null){
+            popView.setVisibility(INVISIBLE);
+        }
+    }
+
+    private void showAmplifyView(Bitmap bitmap, int rawX, int rawY){
+        if(popView == null) {
+            View rootView = getRootView();
+            if (rootView instanceof FrameLayout) {
+                popView = new PopView(getContext());
+                frameLayoutAmplify = (FrameLayout) rootView;
+                frameLayoutAmplify.setId(R.id.amplify_view);
+                frameLayoutAmplify.addView(popView);
+            }
+        }
+        if(popView != null) {
+            FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) popView.getLayoutParams();
+            int topMargin = rawY - (bitmap.getHeight() * 3);
+            int leftMargin = rawX - bitmap.getWidth();
+            int dir = PopView.TOP;
+            if(topMargin <= 0){
+                dir = rawX > frameLayoutAmplify.getWidth() / 2 ? PopView.LEFT : PopView.RIGHT;
+                layoutParams.topMargin = rawY - bitmap.getHeight();
+                if(dir == PopView.LEFT){
+                    layoutParams.leftMargin = leftMargin - (bitmap.getWidth() * 2);
+                }else{
+                    layoutParams.leftMargin = leftMargin + (bitmap.getWidth() * 2);
+                }
+            }else {
+                layoutParams.topMargin = topMargin;
+                if(leftMargin < 0) {
+                    layoutParams.leftMargin = 0;
+                }else if(rawX + bitmap.getWidth() > frameLayoutAmplify.getWidth()){
+                    layoutParams.leftMargin = frameLayoutAmplify.getRight() - bitmap.getWidth() * 2;
+                }else{
+                    layoutParams.leftMargin = leftMargin;
+                }
+            }
+            popView.setLayoutParams(layoutParams);
+            popView.updateView(bitmap, rawX, frameLayoutAmplify.getWidth(), dir);
+            popView.setVisibility(VISIBLE);
+        }
+    }
 
     public void setWordSelectedListener(WordSelectedListener listener) {
         wordSelectedListener = listener;
@@ -114,9 +158,7 @@ public class CusRecyclerView extends RecyclerView {
                 downEventY = -1;
                 removeCallbacks(longClickRunnable);
                 if(isLongPressed){
-                    if(pop != null){
-                        pop.dismiss();
-                    }
+                    dismissAmplifyView();
                     if(wordSelectedListener != null){
                         wordSelectedListener.onWordSelected(selectedWord);
                     }
@@ -147,10 +189,7 @@ public class CusRecyclerView extends RecyclerView {
                     Math.min(getHeight() - HEIGHT, Math.max(0,relativePosY - (HEIGHT/2))),
                     WIDTH, HEIGHT);
             setDrawingCacheEnabled(false);
-            showY = (int)rawY - textHeight - pop.getHeight();
-            if(pop != null){
-                pop.showViewAtLocation(this, (int) rawX - (getRootView().getWidth() / 2), showY, bitmap, (int) rawX, getRootView().getWidth());
-            }
+            showAmplifyView(bitmap, (int)rawX, (int)rawY);
         }
     }
 
@@ -193,7 +232,6 @@ public class CusRecyclerView extends RecyclerView {
             }else if(view instanceof TextView){
                 Rect rect = new Rect();
                 view.getHitRect(rect);
-                textHeight = (int) ((TextView) view).getTextSize();
                 int[] viewLocation = new int[2];
                 view.getLocationOnScreen(viewLocation);
                 rect.right = viewLocation[0] + (rect.right - rect.left);
