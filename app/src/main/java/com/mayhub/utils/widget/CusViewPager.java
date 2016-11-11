@@ -63,6 +63,19 @@ public class CusViewPager extends ViewPager {
         }
     }
 
+    public void setAutoSlideDuration(final int autoSlideDuration1) {
+        autoSlideDuration = autoSlideDuration1;
+    }
+
+    public void setPagerTransitionDuration(final int transitionDuration){
+        setCusScroller(new FixedPagerScroller(getContext(),new DecelerateInterpolator()) {
+            @Override
+            public int getCusDuration() {
+                return transitionDuration;
+            }
+        });
+    }
+
     public void setDefaultFixedScroller(){
         setCusScroller(new FixedPagerScroller(getContext(),new DecelerateInterpolator()) {
             @Override
