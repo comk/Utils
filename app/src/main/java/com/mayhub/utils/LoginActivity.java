@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.os.Process;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
@@ -36,8 +37,10 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.android.volley.VolleyError;
 import com.mayhub.utils.adapter.BasePagerAdapter;
 import com.mayhub.utils.common.FileUtils;
+import com.mayhub.utils.common.MLogUtil;
 import com.mayhub.utils.common.ToastUtils;
 import com.mayhub.utils.download.DownloadListener;
 import com.mayhub.utils.download.DownloadTask;
@@ -45,7 +48,12 @@ import com.mayhub.utils.download.FileDownloaderManager;
 import com.mayhub.utils.download.MultiDownloadTask;
 import com.mayhub.utils.test.TestHeadFootAdapter;
 import com.mayhub.utils.test.TestInfiniteAdapter;
+import com.mayhub.utils.volley.RequestListener;
+import com.mayhub.utils.volley.RequestParams;
 import com.mayhub.utils.widget.CusViewPager;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -58,8 +66,11 @@ import java.io.SequenceInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 import okhttp3.FormBody;
 import okhttp3.MediaType;
@@ -105,6 +116,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private TestHeadFootAdapter testHeadFootAdapter;
     private String[] testStr = new String[]{"testStr1","testStr2","testStr3","testStr4","testStr5","testStr6"};
     private ImageView imageView;
+    private int volleyError = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -153,6 +165,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                startRegister();
 //                startThread();
 //                if(index % 2 == 0) {
 //                    View headView = View.inflate(getApplicationContext(), R.layout.layout_list_item_head, null);
@@ -255,9 +268,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         OkHttpClient client = new OkHttpClient.Builder()
                 .retryOnConnectionFailure(false)
                 .build();
+        String timeStamp = String.valueOf(System.currentTimeMillis());
         RequestBody formBody = new FormBody.Builder()
-                .add("info", "fNjkWKIHO+Ti588GcJvhaGf/VeVmzula5xnEBBmXjWfcpTcIZci1ZgM/2w2SO2E47N69uYSu38El0G+tasLRnJghtEetckbqiQawMEgwkSNT1g2Va92NitO071RgCZn9vitlo8/Tm9te5UKIWui3vD1zEJ1awMKjIOkv7u4gQCg0kb+V/PAK288BND9RcdU4c9mjUO6lRG0XH+k9JujXwgLWx2kZ5Y9wa4ojLFmVwV/1FSxfF8yY+lqV6nbUUwHS0lCEnA1G+exqhMPSO+N2Pe9+i5g4K6xZKIajJ+4C2wvg/D2zFKxkKQAD6WLnnwRcxxCezbM/WP0eHdjl5FeTPL3HyJlKvh1UzyfcrjKF/ageCP96CHTMMFlcOMSy5GNDwFEy6yD2x1WXocyJEYlajYvbH1l6LxcAhI9Wa27EO3PnmKToo28S/eg/Bn3OalVS")
-                .add("timestamp", "1475226339994")
+                .add("info", getEncryptString(getRegisterParams(timeStamp, "okhttp"), timeStamp))
+                .add("timestamp", timeStamp)
                 .build();
 
         Request request = new Request.Builder()
@@ -269,7 +283,71 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         return response.body().string();
     }
 
+    private void volleyReg(){
+        String timeStamp = String.valueOf(System.currentTimeMillis());
+        RequestParams requestParams = new RequestParams();
+        requestParams.addUrlParams(getRegisterParams(timeStamp, "volley"));
+        UserUtils.getInstance().registerUser(requestParams, new RequestListener() {
+            @Override
+            public void requestSuccess(String json) {
+                Log.e("result = ",json);
+                JSONObject jsonObject;
+                try {
+                    jsonObject = new JSONObject(json);
+                    String status = jsonObject.optString("status");
+                    if ("OK".equalsIgnoreCase(status)) {
 
+                    }else{
+                        volleyError ++;
+                    }
+                }catch (JSONException e){
+                    MLogUtil.p(e);
+                }
+                MLogUtil.e("requestSuccess","volleyError-----》 " + volleyError);
+            }
+
+            @Override
+            public void requestError(VolleyError e) {
+                MLogUtil.e("requestError","volleyError-----》 " + volleyError);
+            }
+        });
+    }
+
+    private ConcurrentHashMap<String, String> getRegisterParams(String timeStamp, String tag){
+        ConcurrentHashMap<String, String> examParams = new ConcurrentHashMap<>();
+        examParams.put("enable", "1");
+        examParams.put("password", "123456");
+        examParams.put("name", String.format("name-%s",timeStamp));
+        examParams.put("username", String.format("%s_%s@test.com",timeStamp, tag));
+        examParams.put("device", String.format("%s %s %s", Build.MODEL, Build.VERSION.SDK_INT, Build.VERSION.RELEASE));
+        examParams.put("platform","android");
+        examParams.put("appName","雅思单词");
+        examParams.put("appVersion","test");
+        examParams.put("mail", String.format("%s@test.com",timeStamp));
+        examParams.put("type", "email");
+        examParams.put("examTime", "2017-02-18");
+        examParams.put("grade", "高一");
+        examParams.put("takeExam", "0");
+        examParams.put("targetScore", "9.0");
+        return examParams;
+    }
+
+    @Nullable
+    private String getEncryptString(ConcurrentHashMap<String, String> params, String timeStamp) {
+        ConcurrentHashMap<String, String> info = new ConcurrentHashMap<>();
+        info.put("timestamp",timeStamp);
+        for (Map.Entry<String, String> entry:params.entrySet()){
+            info.put(entry.getKey(), entry.getValue());
+        }
+        String infoStr = JsonUtils.toJson(info);
+        String encryptStr = null;
+        try {
+            encryptStr = EncryptUtile.encrypt(infoStr, timeStamp);
+        } catch (Exception e) {
+            MLogUtil.p(e);
+        }
+        return encryptStr;
+    }
 
     long runReq(String url) throws IOException {
         Request request = new Request.Builder()
@@ -284,6 +362,38 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         return response.body().contentLength();
     }
 
+    private void startRegister(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                int errorCount = 0;
+                volleyError = 0;
+                for (int i = 0; i < 20; i++) {
+                    volleyReg();
+                    try {
+                        String result = postOkhttp("http://172.18.1.188/ielts/user/register");
+                        Log.e("result = ",result);
+                        JSONObject jsonObject;
+                        try {
+                            jsonObject = new JSONObject(result);
+                            String status = jsonObject.optString("status");
+                            if ("OK".equalsIgnoreCase(status)) {
+
+                            }else{
+                                errorCount++;
+                            }
+                        }catch (JSONException e){
+                            MLogUtil.p(e);
+                        }
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
+                MLogUtil.e("Error","-----》 " + errorCount);
+            }
+        }).start();
+    }
+
     private void startThread(){
 
 
@@ -292,13 +402,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             @Override
             public void run() {
 
-                try {
-                    String result = postOkhttp("http://172.19.0.28/ielts/user/register");
-                    Log.e("result = ",result);
-                    return;
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
+
 
                 Log.e("okhttp end","-----------------");
 

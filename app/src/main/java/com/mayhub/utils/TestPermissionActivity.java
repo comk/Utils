@@ -24,6 +24,7 @@ public class TestPermissionActivity extends PermissionActivity implements View.O
 
         findViewById(R.id.permission_request_1).setOnClickListener(this);
         findViewById(R.id.permission_request_2).setOnClickListener(this);
+        findViewById(R.id.permission_request_3).setOnClickListener(this);
 
     }
 
@@ -54,6 +55,33 @@ public class TestPermissionActivity extends PermissionActivity implements View.O
                     @Override
                     public void run() {
                         ToastUtils.getInstance().showShortToast(getApplicationContext(), "Permission Granted");
+                    }
+                }, null);
+                break;
+            case R.id.permission_request_3:
+                String requestPermission3[] = new String[]{
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        Manifest.permission.CAMERA
+                };
+                permissionRequest(requestPermission3 , new PermissionRequestListener() {
+                    @Override
+                    public void onRequestEnd(String[] deniedPermissions) {
+//                        ToastUtils.getInstance().showShortToast(getApplicationContext(), "onRequestEnd " + deniedPermissions.toString());
+                    }
+
+                    @Override
+                    public void onAllRequestGrant() {
+                        ToastUtils.getInstance().showShortToast(getApplicationContext(), "onAllRequestGrant ");
+                    }
+
+                    @Override
+                    public void onPartRequestGrant(String[] deniedPermissions, boolean isRequiredGranted) {
+                        ToastUtils.getInstance().showShortToast(getApplicationContext(), "onPartRequestGrant " + deniedPermissions.toString());
+                    }
+
+                    @Override
+                    public void onAllDenied(String[] deniedPermissions) {
+                        ToastUtils.getInstance().showShortToast(getApplicationContext(), "onAllDenied " + deniedPermissions.toString());
                     }
                 });
                 break;
