@@ -140,6 +140,24 @@ public class CusViewPager extends ViewPager {
     }
 
     @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        try {
+            return super.onTouchEvent(ev);
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        try {
+            return super.onInterceptTouchEvent(ev);
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         isAttachToWindow = false;

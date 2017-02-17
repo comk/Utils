@@ -13,17 +13,25 @@ import java.util.Stack;
  */
 public abstract class InfiniteBasePagerAdapter<T> extends BasePagerAdapter<T>{
 
+    private boolean isInfiniteEnable = true;
+
     public InfiniteBasePagerAdapter(List data) {
         super(data);
+        if(data != null && data.size() == 1){
+            isInfiniteEnable = false;
+        }
     }
 
     public InfiniteBasePagerAdapter(List data, PagerItemClickListener pagerItemClickListener) {
         super(data, pagerItemClickListener);
+        if(data != null && data.size() == 1){
+            isInfiniteEnable = false;
+        }
     }
 
     @Override
     public int getCount() {
-        return Integer.MAX_VALUE;
+        return isInfiniteEnable ? Integer.MAX_VALUE : 1;
     }
 
     public int getRealCount(){

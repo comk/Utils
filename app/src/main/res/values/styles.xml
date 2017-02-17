@@ -7,6 +7,7 @@
         <item name="colorPrimaryDark">@android:color/transparent</item>
         <item name="colorAccent">@android:color/transparent</item>
     </style>
+
     <style name="AppBaseTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -15,6 +16,7 @@
         <item name="actionBarStyle">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
         <item name="android:actionBarStyle">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
     </style>
+
     <style name="mProgress_circle">
         <item name="android:indeterminateDrawable">@drawable/shape_progressbar_circle</item>
         <item name="android:minWidth">25dp</item>
@@ -26,5 +28,9 @@
     <style name="style_status_bar">
         <item name="android:fitsSystemWindows">false</item>
     </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
 </resources>

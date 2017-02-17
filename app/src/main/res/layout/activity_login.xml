@@ -11,14 +11,19 @@
     tools:context="com.mayhub.utils.LoginActivity">
 
     <!-- Login progress -->
-    <ProgressBar
+    <android.support.v4.widget.ContentLoadingProgressBar
         android:id="@+id/login_progress"
         style="?android:attr/progressBarStyleLarge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:visibility="gone" />
-
+        android:visibility="visible" />
+    <com.mayhub.utils.widget.LabelImageView
+        android:id="@+id/label_img"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@android:color/darker_gray"
+        />
 
         <LinearLayout
             android:id="@+id/email_login_form"

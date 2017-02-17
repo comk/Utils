@@ -34,17 +34,19 @@ public class NetUtil {
      */
     public static int getNetWorkType(Context context) {
         int type = NetType.INVALID;
-        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = manager.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()) {
-            String typeName = networkInfo.getTypeName();
-            if (typeName.equalsIgnoreCase("WIFI")) {
-                type = NetType.WIFI;
-            } else if (typeName.equalsIgnoreCase("MOBILE")) {
-                String proxyHost = android.net.Proxy.getDefaultHost();
-                type = TextUtils.isEmpty(proxyHost) ? (isFastMobileNetwork(context) ?
-                        NetType.G3 : NetType.G2) :
-                        NetType.WAP;
+        if(context != null) {
+            ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = manager.getActiveNetworkInfo();
+            if (networkInfo != null && networkInfo.isConnected()) {
+                String typeName = networkInfo.getTypeName();
+                if (typeName.equalsIgnoreCase("WIFI")) {
+                    type = NetType.WIFI;
+                } else if (typeName.equalsIgnoreCase("MOBILE")) {
+                    String proxyHost = android.net.Proxy.getDefaultHost();
+                    type = TextUtils.isEmpty(proxyHost) ? (isFastMobileNetwork(context) ?
+                            NetType.G3 : NetType.G2) :
+                            NetType.WAP;
+                }
             }
         }
         return type;

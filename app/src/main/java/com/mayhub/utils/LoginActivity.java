@@ -3,12 +3,14 @@ package com.mayhub.utils;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.os.Process;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.ContentLoadingProgressBar;
 import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
 
@@ -46,11 +48,14 @@ import com.mayhub.utils.download.DownloadListener;
 import com.mayhub.utils.download.DownloadTask;
 import com.mayhub.utils.download.FileDownloaderManager;
 import com.mayhub.utils.download.MultiDownloadTask;
+import com.mayhub.utils.feature.BehaviorDemo;
+import com.mayhub.utils.feature.ScrollingActivity;
 import com.mayhub.utils.test.TestHeadFootAdapter;
 import com.mayhub.utils.test.TestInfiniteAdapter;
 import com.mayhub.utils.volley.RequestListener;
 import com.mayhub.utils.volley.RequestParams;
 import com.mayhub.utils.widget.CusViewPager;
+import com.mayhub.utils.widget.LabelImageView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -63,10 +68,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -116,11 +123,25 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private TestHeadFootAdapter testHeadFootAdapter;
     private String[] testStr = new String[]{"testStr1","testStr2","testStr3","testStr4","testStr5","testStr6"};
     private ImageView imageView;
+    private LabelImageView labelImageView;
     private int volleyError = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        labelImageView = (LabelImageView) findViewById(R.id.label_img);
+        labelImageView.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                long time = System.currentTimeMillis();
+                labelImageView.setTxt(String.format("%s", time));
+                labelImageView.setTxtPadding((int) (time % 10));
+                labelImageView.setTxtSize((int) (time % 40));
+                labelImageView.setMarginLeft((int) (time % 20));
+                labelImageView.setMarginTop((int) (time % 30));
+
+            }
+        });
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
@@ -139,6 +160,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             @Override
             public void onItemClick(int pos, String s) {
                 ToastUtils.getInstance().showShortToast(getApplicationContext(),pos + " - " + s);
+                startActivity(new Intent(getApplicationContext(), BehaviorDemo.class));
             }
         }));
 
@@ -165,7 +187,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                startRegister();
+                startActivity(new Intent(getApplicationContext(), ScrollingActivity.class));
+                LinkedHashMap linkedHashMap = new LinkedHashMap();
+                linkedHashMap.put("1","2");
+//                startRegister();
 //                startThread();
 //                if(index % 2 == 0) {
 //                    View headView = View.inflate(getApplicationContext(), R.layout.layout_list_item_head, null);
@@ -273,7 +298,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 .add("info", getEncryptString(getRegisterParams(timeStamp, "okhttp"), timeStamp))
                 .add("timestamp", timeStamp)
                 .build();
-
+        HttpURLConnection connection;
         Request request = new Request.Builder()
                 .addHeader("Accept", "application/json; q=0.5")
                 .url(url)

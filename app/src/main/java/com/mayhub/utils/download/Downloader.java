@@ -120,7 +120,7 @@ public abstract class Downloader extends Thread {
     }
 
     private boolean blockMobile(){
-        if(!getDownloadConf().isWorkUnderMobileInternet()){
+        if(!getDownloadConf().isWorkUnderMobileInternet() && getDownloadConf().getContext() != null){
             return NetUtil.NetType.WIFI != NetUtil.getNetWorkType(getDownloadConf().getContext());
         }
         return false;
