@@ -48,8 +48,23 @@ public class FileDownloaderManager {
         }
 
         @Override
+        public void downloadStart(DownloadTask downloadTask1) {
+            synchronized (lock){
+                if(downloadConf.globalListener != null){
+                    downloadConf.globalListener.onStart(downloadTask1);
+                }
+            }
+        }
+
+        @Override
         public void downloadProgress(DownloadTask downloadTask1, int progress) {
             synchronized (lock) {
+                if(downloadTask1 instanceof MultiDownloadTask) {
+                    MultiDownloadTask multiDownloadTask = (MultiDownloadTask) downloadTask1;
+                    if(multiDownloadTask.getTotal() > 1) {
+                        progress = (multiDownloadTask.getCurrentIndex() * 100 + progress) / multiDownloadTask.getTotal();
+                    }
+                }
                 cacheDownloadStatus(downloadTask1, DOWNLOAD_STATUS_DOWNLOADING);
                 cacheDownloadStatus(downloadTask1, progress);
                 if (downloadConf.globalListener != null) {
@@ -84,11 +99,12 @@ public class FileDownloaderManager {
         @Override
         public void downloadCancel(DownloadTask downloadTask1) {
             synchronized (lock) {
+                downloadTask1.setCancel(true);
                 cacheDownloadStatus(downloadTask1, DOWNLOAD_STATUS_CANCEL);
                 clearDownloadProgress(downloadTask1);
                 downloadingTasks.remove(downloadTask1);
                 if(downloadConf.globalListener != null){
-                    downloadConf.globalListener.onFinish(downloadTask1);
+                    downloadConf.globalListener.onCancel(downloadTask1);
                 }
             }
         }
@@ -409,12 +425,20 @@ public class FileDownloaderManager {
 
     public void cancelAll(){
         synchronized (lock) {
-            for (Thread thread : THREAD_INSTANCE_CONTAINER.values()) {
-                thread.interrupt();
+            while (!downloadingTasks.isEmpty()){
+                downloadingTasks.pop().setCancel(true);
             }
             while (!downloadTasks.isEmpty()) {
                 DownloadTask d = downloadTasks.pop();
-                d.getDownloadListener().onCancel(d.getTag(), d.getDownloadUrl(), 0, d.getCurrentIndex(), d.getTotal());
+                if(d.getDownloadListener() != null) {
+                    d.getDownloadListener().onCancel(d.getTag(), d.getDownloadUrl(), 0, d.getCurrentIndex(), d.getTotal());
+                }
+                if(downloadConf.globalListener != null){
+                    downloadConf.globalListener.onCancel(d);
+                }
+            }
+            for (Thread thread : THREAD_INSTANCE_CONTAINER.values()) {
+                thread.interrupt();
             }
             THREAD_INSTANCE_CONTAINER.clear();
             downloadingTasks.clear();

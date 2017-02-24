@@ -61,6 +61,26 @@ public abstract class Downloader extends Thread {
 
     private DownloadTask downloadTask;
 
+    public static class DownloadErrorException extends Exception{
+
+        private String errorMsg;
+
+        public DownloadErrorException(String message, String errorMsg1) {
+            super(message);
+            errorMsg = errorMsg1;
+        }
+
+        public String getErrorMsg() {
+            return errorMsg;
+        }
+    }
+
+    public static class DownloadCancelException extends Exception{
+        public DownloadCancelException(String message) {
+            super(message);
+        }
+    }
+
     public interface IDListener {
         void onPrepare(String realUrl);
 
@@ -82,6 +102,8 @@ public abstract class Downloader extends Thread {
     public abstract DownloadTask getDownloadTask();
 
     public abstract void downloadFinish(DownloadTask downloadTask1);
+
+    public abstract void downloadStart(DownloadTask downloadTask1);
 
     public abstract void downloadProgress(DownloadTask downloadTask1, int progress);
 
@@ -126,12 +148,10 @@ public abstract class Downloader extends Thread {
         return false;
     }
 
-    private void executeTask(){
+    private void executeTask() throws Exception{
         if(blockMobile()){
-            taskCancel();
-            return;
+            throw new DownloadCancelException(String.format("Downloading Task %s Cancel", downloadTask.getDownloadUrl()));
         }
-        downloadTask.incrementProcessTimes();
         Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
         HttpURLConnection conn = null;
         try {
@@ -142,8 +162,7 @@ public abstract class Downloader extends Thread {
 
             addRequestHeaders(conn, true);
             if(isInterrupted() || downloadTask.isCancel()){
-                taskCancel();
-                return;
+                throw new DownloadCancelException(String.format("Downloading Task %s Cancel", downloadTask.getDownloadUrl()));
             }
             final int code = conn.getResponseCode();
             switch (code) {
@@ -152,31 +171,25 @@ public abstract class Downloader extends Thread {
                     downloadFile(conn);
                     if(renameToOriginalName()) {
                         fileComplete();
-                        return;
+                        break;
                     }else{
-                        downloadError(downloadTask);
-                        if (downloadTask.getDownloadListener() != null) {
-                            downloadTask.getDownloadListener().onError(downloadTask.getTag(), code, conn.getResponseMessage(), null, downloadTask.getDownloadUrl(), downloadTask.getCurrentIndex(), downloadTask.getTotal());
-                        }
+                        throw new DownloadErrorException(conn.getResponseMessage(), conn.getResponseMessage());
+//                        downloadError(downloadTask);
+//                        if (downloadTask.getDownloadListener() != null) {
+//                            downloadTask.getDownloadListener().onError(downloadTask.getTag(), code, conn.getResponseMessage(), null, downloadTask.getDownloadUrl(), downloadTask.getCurrentIndex(), downloadTask.getTotal());
+//                        }
                     }
-                    break;
                 case HTTP_MOVED_PERM:
                 case HTTP_MOVED_TEMP:
                 case HTTP_SEE_OTHER:
                 case HTTP_NOT_MODIFIED:
                 case HTTP_TEMP_REDIRECT:
-                    break;
                 default:
-                    downloadError(downloadTask);
-                    if (downloadTask.getDownloadListener() != null) {
-                        downloadTask.getDownloadListener().onError(downloadTask.getTag(), code, conn.getResponseMessage(), null, downloadTask.getDownloadUrl(), downloadTask.getCurrentIndex(), downloadTask.getTotal());
-                    }
-            }
-        } catch (Exception e) {
-            MLogUtil.p(e);
-            downloadError(downloadTask);
-            if (downloadTask.getDownloadListener() != null) {
-                downloadTask.getDownloadListener().onError(downloadTask.getTag(), 0, e == null ? "" : e.getMessage(), null, downloadTask.getDownloadUrl(), downloadTask.getCurrentIndex(), downloadTask.getTotal());
+                    throw new DownloadErrorException(conn.getResponseMessage(), conn.getResponseMessage());
+//                    downloadError(downloadTask);
+//                    if (downloadTask.getDownloadListener() != null) {
+//                        downloadTask.getDownloadListener().onError(downloadTask.getTag(), code, conn.getResponseMessage(), null, downloadTask.getDownloadUrl(), downloadTask.getCurrentIndex(), downloadTask.getTotal());
+//                    }
             }
         } finally {
             if (null != conn) conn.disconnect();
@@ -190,11 +203,10 @@ public abstract class Downloader extends Thread {
         }
     }
 
-    private void multiTask() {
+    private void multiTask() throws Exception{
         while (downloadTask.prepareNextUrl()) {
             if(isInterrupted() || downloadTask.isCancel()){
-                taskCancel();
-                return;
+                throw new DownloadCancelException(String.format("Downloading Task %s Cancel", downloadTask.getDownloadUrl()));
             }
             if(checkSpaceAndFileStatus()){
                 return;
@@ -203,7 +215,7 @@ public abstract class Downloader extends Thread {
         taskFinish();
     }
 
-    private boolean checkSpaceAndFileStatus() {
+    private boolean checkSpaceAndFileStatus() throws Exception{
         if(isSpaceEnough(downloadTask.getDestDir(), MIN_SPACE)) {
             if (getDownloadConf().isCheckLocalFileExist()) {
                 if (!new File(downloadTask.getDestDir(), downloadTask.getFileName()).exists()) {
@@ -221,10 +233,11 @@ public abstract class Downloader extends Thread {
                 executeTask();
             }
         }else{
-            downloadError(downloadTask);
-            if(downloadTask.getDownloadListener() != null){
-                downloadTask.getDownloadListener().onError(downloadTask.getTag(), 0, "存储空间不足", null, downloadTask.getDownloadUrl(), downloadTask.getCurrentIndex(), downloadTask.getTotal());
-            }
+            throw new DownloadErrorException("", "存储空间不足或无文件读写权限");
+//            downloadError(downloadTask);
+//            if(downloadTask.getDownloadListener() != null){
+//                downloadTask.getDownloadListener().onError(downloadTask.getTag(), 0, "存储空间不足或无文件读写权限", null, downloadTask.getDownloadUrl(), downloadTask.getCurrentIndex(), downloadTask.getTotal());
+//            }
         }
         return false;
     }
@@ -247,15 +260,36 @@ public abstract class Downloader extends Thread {
         }
     }
 
+    private void taskStart(){
+        downloadStart(downloadTask);
+        if(downloadTask.getDownloadListener() != null){
+            downloadTask.getDownloadListener().onStart(downloadTask.getTag(), downloadTask.getFileName(), downloadTask.getDownloadUrl(), 0, downloadTask.getCurrentIndex(), downloadTask.getTotal());
+        }
+    }
+
     @Override
     public void run() {
         threadStart(getName());
         try {
             while (!isInterrupted() && (downloadTask = getDownloadTask()) != null) {
-                if(downloadTask instanceof MultiDownloadTask){
-                    multiTask();
-                }else{
-                    checkSpaceAndFileStatus();
+                try {
+                    taskStart();
+                    downloadTask.incrementProcessTimes();
+                    if (downloadTask instanceof MultiDownloadTask) {
+                        multiTask();
+                    } else {
+                        checkSpaceAndFileStatus();
+                    }
+                }catch (Exception e){
+                    if(e instanceof DownloadCancelException){
+                        taskCancel();
+                    }else{
+                        downloadError(downloadTask);
+                        if(downloadTask.getDownloadListener() != null){
+                            downloadTask.getDownloadListener().onError(downloadTask.getTag(), 0, ((DownloadErrorException) e).getErrorMsg(), null, downloadTask.getDownloadUrl(), downloadTask.getCurrentIndex(), downloadTask.getTotal());
+                        }
+                    }
+                    MLogUtil.p(e);
                 }
             }
             threadEnd(getName());
@@ -331,7 +365,7 @@ public abstract class Downloader extends Thread {
         return false;
     }
 
-    private void downloadFile(HttpURLConnection conn) throws IOException, InterruptedException {
+    private void downloadFile(HttpURLConnection conn) throws Exception {
         long totalBytes = getDownloadFileLength(conn);
         if(getDownloadConf().isOverrideLocalFileExist() || !isFileExist(totalBytes)) {
             if(isSpaceEnough(downloadTask.getDestDir(), totalBytes)) {
@@ -345,19 +379,17 @@ public abstract class Downloader extends Thread {
                     if (isInterrupted()) {
                         fos.close();
                         is.close();
-                        throw new InterruptedException(String.format("Downloading Task %s Cancel", downloadTask.getDownloadUrl()));
+                        throw new DownloadCancelException(String.format("Downloading Task %s Cancel", downloadTask.getDownloadUrl()));
                     }
                     if(downloadTask.isCancel()){
                         fos.close();
                         is.close();
-                        taskCancel();
-                        break;
+                        throw new DownloadCancelException(String.format("Downloading Task %s Cancel", downloadTask.getDownloadUrl()));
                     }
                     if(blockMobile()){
                         fos.close();
                         is.close();
-                        taskCancel();
-                        return;
+                        throw new DownloadCancelException("Downloading Task is not work under mobile network");
                     }
                     fos.write(b, 0, len);
                     totalRec += len;
@@ -369,10 +401,11 @@ public abstract class Downloader extends Thread {
                 fos.close();
                 is.close();
             }else{//存储空间不足
-                downloadError(downloadTask);
-                if(downloadTask.getDownloadListener() != null){
-                    downloadTask.getDownloadListener().onError(downloadTask.getTag(), 0, "存储空间不足", null, downloadTask.getDownloadUrl(), downloadTask.getCurrentIndex(), downloadTask.getTotal());
-                }
+                throw new DownloadErrorException("", "存储空间不足或无文件读写权限");
+//                downloadError(downloadTask);
+//                if(downloadTask.getDownloadListener() != null){
+//                    downloadTask.getDownloadListener().onError(downloadTask.getTag(), 0, "存储空间不足或无文件读写权限", null, downloadTask.getDownloadUrl(), downloadTask.getCurrentIndex(), downloadTask.getTotal());
+//                }
             }
         }
 
