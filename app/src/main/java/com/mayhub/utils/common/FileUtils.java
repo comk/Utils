@@ -10,6 +10,34 @@ import java.io.File;
 public class FileUtils {
 
     /**
+     * 判断File对象所指的目录或文件是否存在
+     *
+     * @param file File对象
+     * @return true表示存在 false反之
+     */
+    public static boolean isExist(File file) {
+        return file.exists() && file.length() > 0;
+    }
+
+    public static boolean isExist(String filePath) {
+        File file = new File(filePath);
+        return file.exists() && file.length() > 0;
+    }
+
+    /**
+     * 根据URL路径获取文件名
+     *
+     * @param url URL路径
+     * @return 文件名
+     */
+    public static String getFileNameFromUrl(String url) {
+        if(!TextUtils.isEmpty(url) && url.contains("/")) {
+            return url.substring(url.lastIndexOf("/"));
+        }
+        return null;
+    }
+
+    /**
      * 大于指定大小的文件夹是否存在
      * @param filePath 文件全路径
      * @param size 预期的文件夹大小

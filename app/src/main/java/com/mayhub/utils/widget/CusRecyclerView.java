@@ -7,6 +7,7 @@ import android.graphics.Rect;
 import android.support.v7.widget.RecyclerView;
 import android.text.Layout;
 import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
@@ -307,36 +308,39 @@ public class CusRecyclerView extends RecyclerView {
     }
 
     private boolean hasRemoveForegroundSpan(TextView tv){
-        if(tv.getText() instanceof Spannable) {
-            Spannable spannable = (Spannable) tv.getText();
-            ForegroundColorSpan findSpan = null;
-            if (spannable != null) {
-                ForegroundColorSpan[] spans = spannable.getSpans(0, spannable.length(), ForegroundColorSpan.class);
-                if (spans != null && spans.length > 0) {
-                    for (int i = 0; i < spans.length; i++) {
-                        if (Color.WHITE == spans[i].getForegroundColor()) {
-                            findSpan = spans[i];
-                            break;
-                        }
+        Spannable spannable = (Spannable) tv.getText();
+        if(tv.getText() instanceof SpannableString) {
+            spannable = new Spannable.Factory().newSpannable(tv.getText());
+        }else if(tv.getText() instanceof Spannable){
+            spannable = new Spannable.Factory().newSpannable(tv.getText());
+        }
+        ForegroundColorSpan findSpan = null;
+        if (spannable != null) {
+            ForegroundColorSpan[] spans = spannable.getSpans(0, spannable.length(), ForegroundColorSpan.class);
+            if (spans != null && spans.length > 0) {
+                for (int i = 0; i < spans.length; i++) {
+                    if (Color.WHITE == spans[i].getForegroundColor()) {
+                        findSpan = spans[i];
+                        break;
                     }
                 }
             }
-            if (findSpan != null) {
-                int start = spannable.getSpanStart(findSpan);
-                int end = spannable.getSpanEnd(findSpan);
-                BackgroundColorSpan[] backgroundColorSpan = spannable.getSpans(start, end, BackgroundColorSpan.class);
-                if (backgroundColorSpan != null && backgroundColorSpan.length > 0) {
-                    for (int i = 0; i < backgroundColorSpan.length; i++) {
-                        if(Color.BLUE == backgroundColorSpan[i].getBackgroundColor()){
-                            spannable.removeSpan(backgroundColorSpan[i]);
-                            break;
-                        }
+        }
+        if (findSpan != null) {
+            int start = spannable.getSpanStart(findSpan);
+            int end = spannable.getSpanEnd(findSpan);
+            BackgroundColorSpan[] backgroundColorSpan = spannable.getSpans(start, end, BackgroundColorSpan.class);
+            if (backgroundColorSpan != null && backgroundColorSpan.length > 0) {
+                for (int i = 0; i < backgroundColorSpan.length; i++) {
+                    if(Color.BLUE == backgroundColorSpan[i].getBackgroundColor()){
+                        spannable.removeSpan(backgroundColorSpan[i]);
+                        break;
                     }
                 }
-                spannable.removeSpan(findSpan);
-                tv.setText(spannable, TextView.BufferType.SPANNABLE);
-                return true;
             }
+            spannable.removeSpan(findSpan);
+            tv.setText(spannable, TextView.BufferType.SPANNABLE);
+            return true;
         }
         return false;
     }
@@ -406,8 +410,10 @@ public class CusRecyclerView extends RecyclerView {
 
             if (startEnd[0] < startEnd[1]) {
                 Spannable spanText;
-                if(tv.getText() instanceof Spannable){
-                    spanText = (Spannable) tv.getText();
+                if(tv.getText() instanceof SpannableString) {
+                    spanText = new Spannable.Factory().newSpannable(tv.getText());
+                }else if(tv.getText() instanceof Spannable){
+                    spanText = new Spannable.Factory().newSpannable(tv.getText());
                 }else{
                     spanText = Spannable.Factory.getInstance().newSpannable(
                             tv.getText().toString());
