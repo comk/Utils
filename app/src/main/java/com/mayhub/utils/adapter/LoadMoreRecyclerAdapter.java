@@ -88,6 +88,10 @@ public abstract class LoadMoreRecyclerAdapter extends RecyclerView.Adapter {
         return footViews.size();
     }
 
+    public View getHeadViewByIndex(int idx){
+        return headViews.get(idx);
+    }
+
     public abstract int getChildCount();
 
     public abstract int getChildItemViewType(int pos);

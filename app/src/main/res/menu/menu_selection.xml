@@ -1,0 +1,15 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.mayhub.utils.feature.ScrollingActivity">
+    <item
+        android:id="@+id/translate_cj"
+        android:orderInCategory="100"
+        android:title="中日"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/translate_jc"
+        android:orderInCategory="100"
+        android:title="日中"
+        app:showAsAction="never" />
+</menu>

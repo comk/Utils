@@ -10,7 +10,6 @@ import android.os.Process;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.support.v4.widget.ContentLoadingProgressBar;
 import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
 
@@ -31,6 +30,8 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -44,6 +45,8 @@ import com.mayhub.utils.adapter.BasePagerAdapter;
 import com.mayhub.utils.common.FileUtils;
 import com.mayhub.utils.common.MLogUtil;
 import com.mayhub.utils.common.ToastUtils;
+import com.mayhub.utils.dialog.ImageViewerDialog;
+import com.mayhub.utils.dialog.ImageViewerUtils;
 import com.mayhub.utils.download.DownloadListener;
 import com.mayhub.utils.download.DownloadTask;
 import com.mayhub.utils.download.FileDownloaderManager;
@@ -72,7 +75,6 @@ import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,7 +115,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private static final String HOST = "http://172.18.1.188/ielts/user/register";
 
     private int index = 0;
-
+    String text6 = "\"ずっと刻まれる「母の愛」\n" +
+            "　　友人からの深夜の電話。彼女は息子の小1のときのクラスメートの母親で、いわゆるハハ友である。お寿司屋さんの彼女とは家族ぐるみの付き合いで、もう20年以上が経つ。仕事を持つ私たちが自分の時間を持てるのは、決まって深夜。いつも真夜中にいろいろなことを話し、助け合いながら生きてきた。 (41)息子が一人暮らしを始めた。育ち続けるのだそうお祝いを兼ねてアパートを訪ね、夕食を作り、洗濯をし、汗だくになって真新しいカーテンをつけ終えたという、そして帰る母親に彼は一言「じゃあね」。その「じゃあね」に頭にきたと。なぜ、「お母さんありがとう」と言えないのだ。(42)と、寂しくなったという。\n" +
+            "　　彼女自身は幼い頃に両親が離婚し、父親の元で育ち、中学から家事一切を任されていた。彼女の洗濯物のたたみ方は今でも見ていて美しく、気持ちがいい。子供たちにはできる限りのことをしてあげたいと、いつも一生懸命やってきたという。「それでいいんだよ。」そう答えながら、私には突然、自分が7歳のときの光景が蘇った。\n" +
+            "　　(43)、私の母も働いていた。ある日、初めて友人が家に遊びに来ることになり、前の晩一緒にお風呂に入りながら、母にそのことを告げた。「明日ね、○○チャンと○○チャンと…」。母は黙って(44)。翌日帰宅すると、テーブルの上の紙皿に、人数分の数種類のお菓子がきれいに並べられていた。手作りのケーキや高価なお菓子でもなんでもないけれど、私は自慢げにみなに言った。「さあ、おやつですよー」。\n" +
+            "　　そうなのだ。愛情は突然蘇り、胸いっぱいに広がり、生き続けるものなのだ。彼女の息子への愛も、これからずっと彼の心で(45)。\n" +
+            "　　(大竹しのぶ 朝日新聞2013年7月19日付夕刊による)\"\n";
     // UI references.
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
@@ -125,9 +132,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private ImageView imageView;
     private LabelImageView labelImageView;
     private int volleyError = 0;
+    private ImageViewerDialog imageViewerDialog;
+    private ImageViewerUtils imageViewerUtils;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
         setContentView(R.layout.activity_login);
         labelImageView = (LabelImageView) findViewById(R.id.label_img);
         labelImageView.setOnClickListener(new OnClickListener() {
@@ -149,6 +159,62 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.VERTICAL, false));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(testHeadFootAdapter = new TestHeadFootAdapter());
+        for (int i = 0; i < 5; i++) {
+            ImageView imageView = new ImageView(getApplicationContext());
+            imageView.setTag(i);
+            imageView.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showImageViewer((ImageView) v);
+                }
+            });
+            imageView.setMinimumWidth(i * 96);
+            imageView.setMinimumHeight(i * 96);
+            imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+            imageView.setImageResource(resIds[i]);
+            testHeadFootAdapter.addHeadView(imageView);
+        }
+//        TextView tv = new TextView(getApplicationContext());
+//        tv.setTextIsSelectable(true);
+//        tv.setText(text6);
+//        tv.setCustomSelectionActionModeCallback(new ActionMode.Callback() {
+//            @Override
+//            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+//                mode.setTitle("Selection");
+//                mode.getMenuInflater().inflate(R.menu.menu_selection, menu);
+//                return true;
+//            }
+//
+//            @Override
+//            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+//                menu.clear();
+//                menu.removeItem(android.R.id.selectAll);
+//                // Remove the "cut" option
+//                menu.removeItem(android.R.id.cut);
+//                // Remove the "copy all" option
+//                menu.removeItem(android.R.id.copy);
+//                return true;
+//            }
+//
+//            @Override
+//            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+//                switch (item.getItemId()) {
+//                    case R.id.translate_cj:
+//                        ToastUtils.getInstance().showShortToast(getApplicationContext(), "cj");
+//                        return true;
+//                    case R.id.translate_jc:
+//                        ToastUtils.getInstance().showShortToast(getApplicationContext(), "jc");
+//                        return true;
+//                }
+//                return false;
+//            }
+//
+//            @Override
+//            public void onDestroyActionMode(ActionMode mode) {
+//
+//            }
+//        });
+//        testHeadFootAdapter.addHeadView(tv);
         viewPager = (CusViewPager) findViewById(R.id.viewpager);
 //        viewPager.setAdapter(new TestBasePagerAdapter(Arrays.asList(testStr), new BasePagerAdapter.PagerItemClickListener<String>() {
 //            @Override
@@ -220,6 +286,25 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         });
 
         mProgressView = findViewById(R.id.login_progress);
+    }
+    int[] resIds = new int[]{R.drawable.exo_controls_fastforward, R.drawable.exo_controls_next, R.drawable.exo_controls_pause, R.drawable.exo_controls_previous, R.drawable.exo_controls_play};
+    private void showImageViewer(ImageView imageView){
+//        if(imageViewerDialog == null){
+//            imageViewerDialog = new ImageViewerDialog(LoginActivity.this);
+//        }
+//        ArrayList<ImageViewerDialog.ImageViewStatus> list = new ArrayList<>();
+//        list.add(ImageViewerDialog.create("", "", imageView));
+//        imageViewerDialog.showDialog(0, list);
+
+        if(imageViewerUtils == null){
+            imageViewerUtils = new ImageViewerUtils();
+        }
+        ArrayList<ImageViewerUtils.ImageViewStatus> list = new ArrayList<>();
+
+        for (int i = 0; i < 5; i++) {
+            list.add(ImageViewerUtils.create("", "", (ImageView) testHeadFootAdapter.getHeadViewByIndex(i), resIds[i]));
+        }
+        imageViewerUtils.showDialog((ViewGroup) getWindow().getDecorView(), (Integer) imageView.getTag(), list);
     }
 
     private void populateAutoComplete() {

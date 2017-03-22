@@ -70,7 +70,7 @@ public abstract class BasePagerAdapter<T> extends PagerAdapter implements View.O
             rootView = cacheViews.pop();
         }
         if(pagerItemClickListener != null){
-            rootView.setTag(position);
+            rootView.setTag(rootView.getId(), position);
         }else{
             rootView.setOnClickListener(null);
         }
@@ -91,8 +91,8 @@ public abstract class BasePagerAdapter<T> extends PagerAdapter implements View.O
 
     @Override
     public void onClick(View v) {
-        if(v.getTag() != null && v.getTag() instanceof Integer){
-            int pos = (int) v.getTag();
+        if(v.getTag(v.getId()) != null && v.getTag(v.getId()) instanceof Integer){
+            int pos = (int) v.getTag(v.getId());
             if(pagerItemClickListener != null){
                 pagerItemClickListener.onItemClick(pos, datas.get(pos));
             }

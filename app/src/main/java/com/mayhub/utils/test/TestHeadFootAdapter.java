@@ -31,8 +31,15 @@ public class TestHeadFootAdapter extends LoadMoreRecyclerAdapter {
     String text3 = "Ordinary meteoric water is water that has soaked into the ground from the surface, from precipitation (rain and snow) and from lakes and streams.";
     String text4 = "There it remains, sometimes for long periods, before emerging at the surface again.";
     String text5 = "At first thought it seems incredible that there can be enough space in the “solid” ground underfoot to hold all this water.";
+    String text6 = "\"ずっと刻まれる「母の愛」\n" +
+            "　　友人からの深夜の電話。彼女は息子の小1のときのクラスメートの母親で、いわゆるハハ友である。お寿司屋さんの彼女とは家族ぐるみの付き合いで、もう20年以上が経つ。仕事を持つ私たちが自分の時間を持てるのは、決まって深夜。いつも真夜中にいろいろなことを話し、助け合いながら生きてきた。 (41)息子が一人暮らしを始めた。育ち続けるのだそうお祝いを兼ねてアパートを訪ね、夕食を作り、洗濯をし、汗だくになって真新しいカーテンをつけ終えたという、そして帰る母親に彼は一言「じゃあね」。その「じゃあね」に頭にきたと。なぜ、「お母さんありがとう」と言えないのだ。(42)と、寂しくなったという。\n" +
+            "　　彼女自身は幼い頃に両親が離婚し、父親の元で育ち、中学から家事一切を任されていた。彼女の洗濯物のたたみ方は今でも見ていて美しく、気持ちがいい。子供たちにはできる限りのことをしてあげたいと、いつも一生懸命やってきたという。「それでいいんだよ。」そう答えながら、私には突然、自分が7歳のときの光景が蘇った。\n" +
+            "　　(43)、私の母も働いていた。ある日、初めて友人が家に遊びに来ることになり、前の晩一緒にお風呂に入りながら、母にそのことを告げた。「明日ね、○○チャンと○○チャンと…」。母は黙って(44)。翌日帰宅すると、テーブルの上の紙皿に、人数分の数種類のお菓子がきれいに並べられていた。手作りのケーキや高価なお菓子でもなんでもないけれど、私は自慢げにみなに言った。「さあ、おやつですよー」。\n" +
+            "　　そうなのだ。愛情は突然蘇り、胸いっぱいに広がり、生き続けるものなのだ。彼女の息子への愛も、これからずっと彼の心で(45)。\n" +
+            "　　(大竹しのぶ 朝日新聞2013年7月19日付夕刊による)\"\n";
     public TestHeadFootAdapter(){
         datas.add(text + text2 + text3 + text4 + text5);
+        datas.add(text6);
         datas.addAll(datas);
         datas.addAll(datas);
         datas.addAll(datas);
