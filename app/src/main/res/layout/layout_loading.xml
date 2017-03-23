@@ -1,24 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/v_bg"
+    android:background="#3f000000"
     >
-
     <LinearLayout
+        android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:background="@drawable/shape_progress_bg"
-        android:orientation="vertical"
-        android:padding="30dip" >
+        android:layout_gravity="center"
+        >
 
-        <ProgressBar
-            style="@style/mProgress_circle"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center"
-            android:indeterminate="true"
-            android:indeterminateDuration="1200" />
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/shape_progress_bg"
+            android:orientation="vertical"
+            android:padding="30dip" >
+
+            <ProgressBar
+                style="@style/mProgress_circle"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center"
+                android:indeterminate="true"
+                android:indeterminateDuration="1200" />
+        </FrameLayout>
+        <TextView
+            android:id="@+id/tv_loading_msg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:layout_gravity="center_horizontal"
+            android:textColor="@android:color/white"
+            />
     </LinearLayout>
 
-</RelativeLayout>
+</FrameLayout>

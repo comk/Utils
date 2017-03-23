@@ -42,7 +42,9 @@ import android.widget.TextView;
 
 import com.android.volley.VolleyError;
 import com.mayhub.utils.adapter.BasePagerAdapter;
+import com.mayhub.utils.common.AlertUtils;
 import com.mayhub.utils.common.FileUtils;
+import com.mayhub.utils.common.LoadingUtils;
 import com.mayhub.utils.common.MLogUtil;
 import com.mayhub.utils.common.ToastUtils;
 import com.mayhub.utils.dialog.ImageViewerDialog;
@@ -165,7 +167,28 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             imageView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    showImageViewer((ImageView) v);
+                    AlertUtils.getInstance().listener(new AlertUtils.AlertListenerAdapter() {
+                        @Override
+                        public void onDismiss() {
+                            super.onDismiss();
+                        }
+
+                        @Override
+                        public void onBtnClick() {
+                            super.onBtnClick();
+                        }
+
+                        @Override
+                        public void onBtnLeftClick() {
+                            super.onBtnLeftClick();
+                        }
+
+                        @Override
+                        public void onBtnRightClick() {
+                            super.onBtnRightClick();
+                        }
+                    }).showOptionAlert(LoginActivity.this, true, "this is alert content.", "Cancel", "OK");
+                    LoadingUtils.getInstance().showLoading(LoginActivity.this, true, "loading ...");
                 }
             });
             imageView.setMinimumWidth(i * 96);
