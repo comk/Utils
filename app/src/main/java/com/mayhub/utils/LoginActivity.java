@@ -44,6 +44,7 @@ import com.android.volley.VolleyError;
 import com.mayhub.utils.adapter.BasePagerAdapter;
 import com.mayhub.utils.common.AlertUtils;
 import com.mayhub.utils.common.FileUtils;
+import com.mayhub.utils.common.InputDialogUtils;
 import com.mayhub.utils.common.LoadingUtils;
 import com.mayhub.utils.common.MLogUtil;
 import com.mayhub.utils.common.ToastUtils;
@@ -167,27 +168,27 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             imageView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    AlertUtils.getInstance().listener(new AlertUtils.AlertListenerAdapter() {
+                    InputDialogUtils.getInstance().listener(new InputDialogUtils.AlertListenerAdapter() {
                         @Override
                         public void onDismiss() {
                             super.onDismiss();
                         }
 
                         @Override
-                        public void onBtnClick() {
-                            super.onBtnClick();
+                        public void onBtnClick(String text) {
+
                         }
 
                         @Override
-                        public void onBtnLeftClick() {
-                            super.onBtnLeftClick();
+                        public void onBtnLeftClick(String text) {
+
                         }
 
                         @Override
-                        public void onBtnRightClick() {
-                            super.onBtnRightClick();
+                        public void onBtnRightClick(String text) {
+
                         }
-                    }).showOptionAlert(LoginActivity.this, true, "this is alert content.", "Cancel", "OK");
+                    }).showOptionAlert(LoginActivity.this, true, "what's your idea now ?", "input your idea here", null,"Cancel", "OK");
                     LoadingUtils.getInstance().showLoading(LoginActivity.this, true, "loading ...");
                 }
             });

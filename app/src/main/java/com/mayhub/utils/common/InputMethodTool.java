@@ -53,7 +53,11 @@ public class InputMethodTool {
 		}
 		return false;
 	}
-	
+
+	public static void showInputMethod(EditText editText){
+		editText.requestFocus();
+	}
+
 	public static void setupUI(final View view, final Activity act) {
 		if(view == null || act == null)
 			return;
