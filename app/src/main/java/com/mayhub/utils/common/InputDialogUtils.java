@@ -106,7 +106,7 @@ public class InputDialogUtils implements View.OnClickListener, Animator.Animator
                 tvRight.setOnClickListener(this);
                 viewGroup.addView(viewRoot);
                 viewRoot.animate().setDuration(DEFAULT_DURATION).setListener(this).alphaBy(1).start();
-                InputMethodTool.showInputMethod(etContent);
+                InputMethodTool.showInputMethod(activity, etContent);
             }
         }
     }
@@ -136,7 +136,7 @@ public class InputDialogUtils implements View.OnClickListener, Animator.Animator
                 tvRight.setOnClickListener(this);
                 viewGroup.addView(viewRoot);
                 viewRoot.animate().setDuration(DEFAULT_DURATION).setListener(this).alphaBy(1).start();
-                InputMethodTool.showInputMethod(etContent);
+                InputMethodTool.showInputMethod(activity, etContent);
             }
         }
     }

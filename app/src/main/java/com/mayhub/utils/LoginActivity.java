@@ -186,10 +186,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                         @Override
                         public void onBtnRightClick(String text) {
-
+                            startActivity(new Intent(getApplicationContext(), Main2ActivityProcess1.class));
                         }
                     }).showOptionAlert(LoginActivity.this, true, "what's your idea now ?", "input your idea here", null,"Cancel", "OK");
-                    LoadingUtils.getInstance().showLoading(LoginActivity.this, true, "loading ...");
+//                    LoadingUtils.getInstance().showLoading(LoginActivity.this, true, "loading ...");
                 }
             });
             imageView.setMinimumWidth(i * 96);

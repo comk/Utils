@@ -54,8 +54,13 @@ public class InputMethodTool {
 		return false;
 	}
 
-	public static void showInputMethod(EditText editText){
-		editText.requestFocus();
+	public static void showInputMethod(final Activity act, EditText editText){
+		InputMethodManager imm = (InputMethodManager) act
+				.getSystemService(Context.INPUT_METHOD_SERVICE);
+		if (imm != null ) {
+			editText.requestFocus();
+			imm.showSoftInput(editText, InputMethodManager.RESULT_UNCHANGED_SHOWN);
+		}
 	}
 
 	public static void setupUI(final View view, final Activity act) {

@@ -10,7 +10,9 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -33,6 +35,7 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.mayhub.utils.common.LocalValueUtils;
+import com.mayhub.utils.common.MediaPlayerUtils;
 import com.mayhub.utils.feature.BehaviorDemo;
 import com.mayhub.utils.feature.ScrollingActivity;
 
@@ -42,13 +45,14 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
-public class Main2ActivityProcess1 extends AppCompatActivity {
+public class Main2ActivityProcess1 extends AppCompatActivity implements View.OnClickListener{
 
     private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
+    private static final String TAG = Main2ActivityProcess1.class.getSimpleName();
     private EventLogger eventLogger = new EventLogger();
     final MediaPlayer mediaPlayer = new MediaPlayer();
 
-    private SimpleExoPlayer player;
+//    private SimpleExoPlayer player;
     private Handler mainHandler = new Handler();
     private String userAgent;
     private DefaultDataSourceFactory mediaDataSourceFactory;
@@ -60,16 +64,16 @@ public class Main2ActivityProcess1 extends AppCompatActivity {
         mediaDataSourceFactory = new DefaultDataSourceFactory(getApplicationContext(), userAgent, BANDWIDTH_METER);
         videoTrackSelectionFactory = new AdaptiveVideoTrackSelection.Factory(BANDWIDTH_METER);
         trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
-        player = ExoPlayerFactory.newSimpleInstance(getApplicationContext(), trackSelector, new DefaultLoadControl(),
-                null, SimpleExoPlayer.EXTENSION_RENDERER_MODE_ON);
-
-        player.setPlayWhenReady(true);
+//        player = ExoPlayerFactory.newSimpleInstance(getApplicationContext(), trackSelector, new DefaultLoadControl(),
+//                null, SimpleExoPlayer.EXTENSION_RENDERER_MODE_ON);
+//
+//        player.setPlayWhenReady(true);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        player.release();
+//        player.release();
         mediaPlayer.release();
     }
 
@@ -86,23 +90,22 @@ public class Main2ActivityProcess1 extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
         setContentView(R.layout.activity_main2_activity_process1);
         copyAudioFile();
-        initExoPlayer();
-        etSpeed = (EditText) findViewById(R.id.et_speed);
-        findViewById(R.id.set_speed).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(Build.VERSION.SDK_INT > 22) {
-                    PlaybackParams playbackParams = new PlaybackParams();
-                    playbackParams.setSpeed(Float.parseFloat(etSpeed.getText().toString()));
-                    player.setPlaybackParams(playbackParams);
-                }
-            }
-        });
-        findViewById(R.id.tv).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+//        initExoPlayer();
+        findViewById(R.id.tv_play).setOnClickListener(this);
+        findViewById(R.id.tv_pause).setOnClickListener(this);
+        findViewById(R.id.tv_stop).setOnClickListener(this);
+        findViewById(R.id.tv_destroy).setOnClickListener(this);
+        findViewById(R.id.set_speed).setOnClickListener(this);
+        findViewById(R.id.tv_volume_add).setOnClickListener(this);
+        findViewById(R.id.tv_volume_sub).setOnClickListener(this);
+        LocalValueUtils.initInstance(getApplicationContext());
+
+//        findViewById(R.id.tv).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
 //                LocalValueUtils.initInstance(getApplicationContext());
 //                TextView tv = (TextView) v;
 //                tv.setText(LocalValueUtils.getInstance().getString("String"));
@@ -134,10 +137,12 @@ public class Main2ActivityProcess1 extends AppCompatActivity {
 //                } catch (Exception e) {
 //                    e.printStackTrace();
 //                }
-                player.prepare(buildMediaSource(Uri.fromFile(new File(getCacheDir(), "music.mp3")), null));
+//                player.prepare(buildMediaSource(Uri.fromFile(new File(getCacheDir(), "music.mp3")), null));
 
-            }
-        });
+
+
+//            }
+//        });
     }
 
     private MediaSource buildMediaSource(Uri uri, String overrideExtension) {
@@ -163,14 +168,84 @@ public class Main2ActivityProcess1 extends AppCompatActivity {
 
     private void copyFileToSDCard(InputStream is) throws Exception{
         File f = new File(getCacheDir(), "music.mp3");
-        FileOutputStream fos = new FileOutputStream(f);
-        byte[] bytes = new byte[1024];
-        int len;
-        while((len = is.read(bytes, 0, bytes.length)) != -1){
-            fos.write(bytes, 0, len);
-            fos.flush();
+        if(!f.exists()) {
+            FileOutputStream fos = new FileOutputStream(f);
+            byte[] bytes = new byte[1024];
+            int len;
+            while ((len = is.read(bytes, 0, bytes.length)) != -1) {
+                fos.write(bytes, 0, len);
+                fos.flush();
+            }
+            fos.close();
         }
-        fos.close();
     }
 
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.tv_play:
+                MediaPlayerUtils.getInstance().start();
+                break;
+            case R.id.tv_destroy:
+                MediaPlayerUtils.getInstance().destroy();
+                break;
+            case R.id.tv_pause:
+                MediaPlayerUtils.getInstance().pause();
+                break;
+            case R.id.tv_stop:
+                MediaPlayerUtils.getInstance().stop();
+                break;
+            case R.id.tv_volume_add:
+                MediaPlayerUtils.getInstance().setSpeed(MediaPlayerUtils.getInstance().getSpeed() + 0.1f);
+                break;
+            case R.id.tv_volume_sub:
+                MediaPlayerUtils.getInstance().setSpeed(MediaPlayerUtils.getInstance().getSpeed() - 0.1f);
+                break;
+            case R.id.set_speed:
+                MediaPlayerUtils.getInstance().setPlayPath(new File(getCacheDir(), "music.mp3"));
+                MediaPlayerUtils.getInstance().setAutoPlay(true);
+                MediaPlayerUtils.getInstance().setPlayerListener(new MediaPlayerUtils.PlayerListener() {
+                    @Override
+                    public void onPrepared(String playPath, int duration) {
+                        Log.d(TAG, "onPrepared() called with: " + "playPath = [" + playPath + "], duration = [" + duration + "]");
+                    }
+
+                    @Override
+                    public void onStart(String playPath, int curPosition) {
+                        Log.d(TAG, "onStart() called with: " + "playPath = [" + playPath + "], curPosition = [" + curPosition + "]");
+                    }
+
+                    @Override
+                    public void onPause(String playPath, int curPosition) {
+                        Log.d(TAG, "onPause() called with: " + "playPath = [" + playPath + "], curPosition = [" + curPosition + "]");
+                    }
+
+                    @Override
+                    public void onSeekComplete(String playPath, int seekPosition) {
+                        Log.d(TAG, "onSeekComplete() called with: " + "playPath = [" + playPath + "], seekPosition = [" + seekPosition + "]");
+                    }
+
+                    @Override
+                    public void onPlaying(String playPath, int curPosition) {
+                        Log.d(TAG, "onPlaying() called with: " + "playPath = [" + playPath + "], curPosition = [" + curPosition + "]");
+                    }
+
+                    @Override
+                    public void onResume(String playPath, int curPosition) {
+                        Log.d(TAG, "onResume() called with: " + "playPath = [" + playPath + "], curPosition = [" + curPosition + "]");
+                    }
+
+                    @Override
+                    public void onStop(String playPath) {
+                        Log.d(TAG, "onStop() called with: " + "playPath = [" + playPath + "]");
+                    }
+
+                    @Override
+                    public void onComplete(String playPath) {
+                        Log.d(TAG, "onComplete() called with: " + "playPath = [" + playPath + "]");
+                    }
+                });
+                break;
+        }
+    }
 }
