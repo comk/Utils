@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
-import android.support.v7.widget.RecyclerView;
 import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -15,19 +14,20 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.mayhub.utils.R;
-import com.mayhub.utils.common.SelectionViewUtils;
-
-
 /**
- * Created by Administrator on 2016/3/28.
+ * Created by comkdai on 2017/3/29.
  */
-public class CusRecyclerView extends RecyclerView {
+public class SelectionLinearLayout extends LinearLayout {
 
-    private WordSelectedListener wordSelectedListener;
+    public static final String WORD_SET = "/u4e00-/u9fa5";
+
+    public static final int UNICODE_START = 0x4E00;
+    public static final int UNICODE_END = 0x9FA5;
+
+    public static final String FORMAT_REGEX = "/([%s])/";
 
     public boolean isLongPressed;
 
@@ -49,91 +49,21 @@ public class CusRecyclerView extends RecyclerView {
 
     private String selectedWord;
 
-    public CusRecyclerView(Context context) {
-        this(context, null);
+    public SelectionLinearLayout(Context context) {
+        super(context);
     }
 
-    public CusRecyclerView(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
+    public SelectionLinearLayout(Context context, AttributeSet attrs) {
+        super(context, attrs);
     }
 
-    public CusRecyclerView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-        PopView.initHeightWidth(context);
-        WIDTH = PopView.WIDTH / 2;
-        HEIGHT = PopView.HEIGHT / 2;
-    }
-
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        if(location[0] == 0 && location[1] == 0){
-            getLocationOnScreen(location);
-        }
-
-        boolean isIntercept = super.onInterceptTouchEvent(ev);
-        if(!isIntercept) {
-            onTouchEvent(ev);
-        }
-        return isIntercept;
-    }
-
-
-    PopView popView;
-
-    FrameLayout frameLayoutAmplify;
-
-    private void dismissAmplifyView(){
-        if(popView != null){
-            popView.setVisibility(INVISIBLE);
-        }
-    }
-
-    private void showAmplifyView(Bitmap bitmap, int rawX, int rawY){
-        if(popView == null) {
-            View rootView = getRootView();
-            if (rootView instanceof FrameLayout) {
-                popView = new PopView(getContext());
-                frameLayoutAmplify = (FrameLayout) rootView;
-                frameLayoutAmplify.setId(R.id.amplify_view);
-                frameLayoutAmplify.addView(popView);
-            }
-        }
-        if(popView != null) {
-            FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) popView.getLayoutParams();
-            int topMargin = rawY - (bitmap.getHeight() * 3);
-            int leftMargin = rawX - bitmap.getWidth();
-            int dir = PopView.TOP;
-            if(topMargin <= 0){
-                dir = rawX > frameLayoutAmplify.getWidth() / 2 ? PopView.LEFT : PopView.RIGHT;
-                layoutParams.topMargin = rawY - bitmap.getHeight();
-                if(dir == PopView.LEFT){
-                    layoutParams.leftMargin = leftMargin - (bitmap.getWidth() * 2);
-                }else{
-                    layoutParams.leftMargin = leftMargin + (bitmap.getWidth() * 2);
-                }
-            }else {
-                layoutParams.topMargin = topMargin;
-                if(leftMargin < 0) {
-                    layoutParams.leftMargin = 0;
-                }else if(rawX + bitmap.getWidth() > frameLayoutAmplify.getWidth()){
-                    layoutParams.leftMargin = frameLayoutAmplify.getRight() - bitmap.getWidth() * 2;
-                }else{
-                    layoutParams.leftMargin = leftMargin;
-                }
-            }
-            popView.setLayoutParams(layoutParams);
-            popView.updateView(bitmap, rawX, frameLayoutAmplify.getWidth(), dir);
-            popView.setVisibility(VISIBLE);
-        }
-    }
-
-    public void setWordSelectedListener(WordSelectedListener listener) {
-        wordSelectedListener = listener;
+    public SelectionLinearLayout(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        if(getAdapter() == null){
+        if(getChildCount() == 0){
             return super.onTouchEvent(ev);
         }
         switch(ev.getAction()){
@@ -160,10 +90,7 @@ public class CusRecyclerView extends RecyclerView {
                 downEventY = -1;
                 removeCallbacks(longClickRunnable);
                 if(isLongPressed){
-                    dismissAmplifyView();
-                    if(wordSelectedListener != null){
-                        wordSelectedListener.onWordSelected(selectedWord);
-                    }
+
                     isLongPressed = false;
                 }
                 break;
@@ -241,8 +168,7 @@ public class CusRecyclerView extends RecyclerView {
                 rect.left = viewLocation[0];
                 rect.top = viewLocation[1];
                 if(rect.contains((int)rawX,(int)rawY)){
-                    SelectionViewUtils.getInstance().showSelection(getContext(), (TextView) view, rawX, rawY);
-//                    return getTextByPoint((TextView) view,rawX - rect.left,rawY - rect.top);
+                    return getTextByPoint((TextView) view,rawX - rect.left,rawY - rect.top);
                 }
             }
         }
@@ -347,55 +273,7 @@ public class CusRecyclerView extends RecyclerView {
         return false;
     }
 
-    private int[] findTextStartEndPosition(int offset, String textString){
-        int subStringWidth = 60;
-        int subStrBegin = offset - subStringWidth / 2;
-        int subStrEnd = offset + subStringWidth / 2;
-        int stringEnd = subStringWidth / 2 + 1;
-        int stringBegin = subStringWidth / 2;
-        if (subStrBegin < 0)
-        {
-            subStrBegin = 0;
-            stringEnd = offset;
-            stringBegin = 0;
-        }
-        if (subStrEnd >= textString.length())
-        {
-            subStrEnd = textString.length();
-            stringEnd = textString.length();
-        }
 
-        String subString = textString.substring(subStrBegin, subStrEnd);
-        int divider = offset - subStrBegin + 1;
-        for (int i = divider; i < subString.length(); i++)
-        {
-            if (subString.charAt(i) >= 'a' && subString.charAt(i) <= 'z')
-            {
-                continue;
-            }
-            if (subString.charAt(i) >= 'A' && subString.charAt(i) <= 'Z')
-            {
-                continue;
-            }
-            stringEnd = i;
-            break;
-        }
-        for (int i = divider - 1; i >= 0; i--)
-        {
-            if (subString.charAt(i) >= 'a' && subString.charAt(i) <= 'z')
-            {
-                continue;
-            }
-            if (subString.charAt(i) >= 'A' && subString.charAt(i) <= 'Z')
-            {
-                continue;
-            }
-            stringBegin = i + 1;
-            break;
-        }
-
-        return new int[]{stringBegin, stringEnd, subStrBegin};
-    }
 
     private String getTextByPoint(TextView tv, float rawX, float rawY){
         clearAllTextViewSpan();
@@ -405,46 +283,43 @@ public class CusRecyclerView extends RecyclerView {
 //            int line = layout.getLineForVertical((int) (rawY - tv.getTop() + (tv.getTextSize() / 2)));
             int line = layout.getLineForVertical((int) (rawY - tv.getPaddingTop()));
             int offset = layout.getOffsetForHorizontal(line, rawX - tv.getPaddingLeft()) - 1;
-            if (offset < 0) {
-                offset = 0;
-            }
-            int[] startEnd = findTextStartEndPosition(offset, tv.getText().toString());
 
-            if (startEnd[0] < startEnd[1]) {
-                Spannable spanText;
-                if(tv.getText() instanceof SpannableString) {
-                    spanText = new Spannable.Factory().newSpannable(tv.getText());
-                }else if(tv.getText() instanceof Spannable){
-                    spanText = new Spannable.Factory().newSpannable(tv.getText());
-                }else{
-                    spanText = Spannable.Factory.getInstance().newSpannable(
-                            tv.getText().toString());
-                }
-                String textString = tv.getText().toString();
-                if (startEnd[2] == 0) {
-                    spanText.setSpan(new ForegroundColorSpan(Color.WHITE), startEnd[0], startEnd[1],
-                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    spanText.setSpan(new BackgroundColorSpan(Color.BLUE), startEnd[0],
-                            startEnd[1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    findText = textString.substring(startEnd[0], startEnd[1]);
-                    tv.setText(spanText, TextView.BufferType.SPANNABLE);
-//                    setTextSpan(tv, false);
-                } else {
-                    int spanEnd = offset - 30 + startEnd[1];
-                    if (spanEnd >= tv.getText().length()) {
-                        spanEnd = tv.getText().length();
-                    }
-                    spanText.setSpan(new ForegroundColorSpan(Color.WHITE), offset - 30 + startEnd[0],
-                            spanEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    spanText.setSpan(new BackgroundColorSpan(Color.BLUE), offset - 30
-                                    + startEnd[0], spanEnd,
-                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    findText = textString.substring(offset - 30 + startEnd[0],
-                            spanEnd);
-                    tv.setText(spanText, TextView.BufferType.SPANNABLE);
-//                    setTextSpan(tv, false);
-                }
-            }
+
+//            if (startEnd[0] < startEnd[1]) {
+//                Spannable spanText;
+//                if(tv.getText() instanceof SpannableString) {
+//                    spanText = new Spannable.Factory().newSpannable(tv.getText());
+//                }else if(tv.getText() instanceof Spannable){
+//                    spanText = new Spannable.Factory().newSpannable(tv.getText());
+//                }else{
+//                    spanText = Spannable.Factory.getInstance().newSpannable(
+//                            tv.getText().toString());
+//                }
+//                String textString = tv.getText().toString();
+//                if (startEnd[2] == 0) {
+//                    spanText.setSpan(new ForegroundColorSpan(Color.WHITE), startEnd[0], startEnd[1],
+//                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                    spanText.setSpan(new BackgroundColorSpan(Color.BLUE), startEnd[0],
+//                            startEnd[1], Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                    findText = textString.substring(startEnd[0], startEnd[1]);
+//                    tv.setText(spanText, TextView.BufferType.SPANNABLE);
+////                    setTextSpan(tv, false);
+//                } else {
+//                    int spanEnd = offset - 30 + startEnd[1];
+//                    if (spanEnd >= tv.getText().length()) {
+//                        spanEnd = tv.getText().length();
+//                    }
+//                    spanText.setSpan(new ForegroundColorSpan(Color.WHITE), offset - 30 + startEnd[0],
+//                            spanEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                    spanText.setSpan(new BackgroundColorSpan(Color.BLUE), offset - 30
+//                                    + startEnd[0], spanEnd,
+//                            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                    findText = textString.substring(offset - 30 + startEnd[0],
+//                            spanEnd);
+//                    tv.setText(spanText, TextView.BufferType.SPANNABLE);
+////                    setTextSpan(tv, false);
+//                }
+//            }
             tv.setTag(null);
         }
         lastFocusTextView = tv;
@@ -462,11 +337,6 @@ public class CusRecyclerView extends RecyclerView {
             onLongClickEvent(downEventX,downEventY);
         }
     };
-
-    public interface WordSelectedListener {
-         void onWordSelected(String word);
-    }
-
 
 
 }
