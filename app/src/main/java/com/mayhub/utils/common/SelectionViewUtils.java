@@ -38,12 +38,17 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
     private static final class START implements NoCopySpan { }
     private static final class END implements NoCopySpan { }
 
-    public static final Object SELECTION_START = new START();
+    public static final Object SELECTION_START = new BackgroundColorSpan(Color.RED);
     public static final Object SELECTION_END = new END();
 
     @Override
-    public void onDrag(float x, float y, boolean isFromStart) {
-        updateTextViewSelectionArea(tvSelection, x, y, isFromStart);
+    public void onDrag(float x, float y, boolean isStart) {
+        updateTextViewSelectionArea(tvSelection, x, y, isStart);
+    }
+
+    @Override
+    public void dragEnd(float y, int viewId) {
+        endDrag(y, viewId == leftView.getId());
     }
 
     public interface SelectionListener{
@@ -127,7 +132,6 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
     }
 
     private void initTextViewSelectionArea(TextView view, float rawX, float rawY){
-        Rect rect = new Rect();
         view.getHitRect(rect);
         int[] viewLocation = new int[2];
         view.getLocationOnScreen(viewLocation);
@@ -155,29 +159,10 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
         }
     }
 
-    private void updateStart(int offset, Layout layout, int top){
-        startLast = offset;
-        primaryHori = layout.getPrimaryHorizontal(startLast);
-        showDragger(true, (int) primaryHori, top);
-        showSelectionArea(tvSelection, startLast, endLast, true);
-    }
+    private boolean stateReverse = false;
 
-    private void updateEnd(int offset, Layout layout, int top){
-        endLast = offset + 1;
-        secondaryHori = layout.getPrimaryHorizontal(endLast);
-        showDragger(false, (int) secondaryHori, top);
-        showSelectionArea(tvSelection, startLast, endLast, true);
-    }
-
-    private void updateTextViewSelectionArea(TextView view, float rawX, float rawY, boolean isFromStart){
-        Rect rect = new Rect();
-        view.getHitRect(rect);
-        int[] viewLocation = new int[2];
-        view.getLocationOnScreen(viewLocation);
-        rect.right = viewLocation[0] + (rect.right - rect.left);
-        rect.bottom = viewLocation[1] + (rect.bottom - rect.top);
-        rect.left = viewLocation[0];
-        rect.top = viewLocation[1];
+    Rect rect = new Rect();
+    private void updateTextViewSelectionArea(TextView view, float rawX, float rawY, boolean isStart){
         if(rect.contains((int)rawX,(int)rawY)){
             Layout layout = view.getLayout();
             if(layout != null && !TextUtils.isEmpty(view.getText().toString().trim())) {
@@ -185,34 +170,76 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
                 int offset = layout.getOffsetForHorizontal(line, rawX - rect.left - view.getPaddingLeft()) - 1;
                 if(offset >= 0) {
                     int top = rect.top + view.getPaddingTop() + ((line + 1) * lineHeight);
-                    if(offset < startLast){
-                        updateStart(offset, layout, top);
-                    }else if(offset > endLast){
-                        updateEnd(offset, layout, top);
-                    }else{
-                        if(offset != endLast && offset != startLast){
-                            if(isFromStart){
-                                if(offset > endLast){
-                                    startLast = endLast;
-                                    updateEnd(offset, layout, top);
-                                }else{
-                                    updateStart(offset, layout, top);
-                                }
+//                    if(offset < startLast){
+//                        startLast = offset;
+//                    }else if(offset > endLast){
+//                        endLast = offset;
+//                    }else{
+                        if(isStart || stateReverse){
+                            if(offset > endLast) {
+                                startLast = endLast;
+                                endLast = offset;
+                                stateReverse = !stateReverse;
+                            }else if(offset < endLast){
+                                startLast = offset;
                             }else{
-                                if(offset < startLast){
-                                    endLast = startLast;
-                                    updateStart(offset, layout, top);
-                                }else{
-                                    updateEnd(offset, layout, top);
-                                }
-
+                                endLast = offset;
+                            }
+                        }else{
+                            if(offset < startLast) {
+                                endLast = startLast;
+                                startLast = offset;
+                                stateReverse = !stateReverse;
+                            }else if(offset > startLast){
+                                endLast = offset;
+                            }else {
+                                startLast = offset;
                             }
                         }
-                    }
+//                    }
+                    showSelectionArea(tvSelection, startLast, endLast, true);
                     layoutOptionByCenter((int) ((primaryHori + secondaryHori) / 2), top - lineHeight);
                 }
             }
         }
+    }
+
+    private void endDrag(float rawY, boolean isStart){
+        Log.e(TAG, "endDrag() called with: " + "rawY = [" + rawY + "]");
+        if(tvSelection != null) {
+            Layout layout = tvSelection.getLayout();
+            if (layout != null && !TextUtils.isEmpty(tvSelection.getText().toString().trim())) {
+                int line = layout.getLineForVertical((int) (rawY - rect.top - tvSelection.getPaddingTop()));
+                int top2 = rect.top + tvSelection.getPaddingTop() + ((line + 1) * lineHeight);
+                if(stateReverse){
+                    if(isStart){
+                        secondaryHori = layout.getSecondaryHorizontal(endLast) + rect.left + tvSelection.getPaddingLeft();
+                        showDragger(true, (int) secondaryHori, top2);
+                    }else{
+                        secondaryHori = layout.getSecondaryHorizontal(startLast) + rect.left + tvSelection.getPaddingLeft();
+                        showDragger(false, (int) secondaryHori, top2);
+                    }
+                    exchangeViewPos();
+                }else {
+                    if(isStart){
+                        secondaryHori = layout.getSecondaryHorizontal(startLast) + rect.left + tvSelection.getPaddingLeft();
+                        showDragger(false, (int) secondaryHori, top2);
+                    }else {
+                        secondaryHori = layout.getSecondaryHorizontal(endLast) + rect.left + tvSelection.getPaddingLeft();
+                        showDragger(false, (int) secondaryHori, top2);
+                    }
+                }
+                showSelectionArea(tvSelection, startLast, endLast, false);
+                layoutOptionByCenter((int) ((primaryHori + secondaryHori) / 2), top2 - lineHeight);
+            }
+        }
+    }
+
+    private void exchangeViewPos() {
+        FrameLayout.LayoutParams layoutParamsL = (FrameLayout.LayoutParams) leftView.getLayoutParams();
+        FrameLayout.LayoutParams layoutParamsR = (FrameLayout.LayoutParams) rightView.getLayoutParams();
+        rightView.setLayoutParams(layoutParamsL);
+        leftView.setLayoutParams(layoutParamsR);
     }
 
     private void layoutOptionByCenter(final int x, final int y){
@@ -300,6 +327,13 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
         return findText;
     }
 
+    private void clearSelection(){
+        if(tvSelection != null){
+            Spannable spanText = (Spannable) tvSelection.getText();
+            spanText.removeSpan(SELECTION_START);
+        }
+    }
+
     private void showSelectionArea(TextView tv, int start, int end, boolean isExtend){
         Spannable spanText = (Spannable) tv.getText();
 //        if(tv.getText() instanceof SpannableString) {
@@ -310,8 +344,8 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
 //            spanText = Spannable.Factory.getInstance().newSpannable(
 //                    tv.getText().toString());
 //        }
-        Selection.removeSelection(spanText);
-        Selection.setSelection(spanText, start, end);
+//        Selection.removeSelection(spanText);
+//        Selection.setSelection(spanText, start, end);
 //        if(isExtend){
 //            Selection.setSelection(spanText, start, end);
 //            int oldEnd = spanText.getSpanEnd(SELECTION_END);
@@ -333,13 +367,13 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
 //                    Spanned.SPAN_POINT_POINT);
 ////            tv.setText(spanText);
 //        }
-//        spanText.removeSpan(SELECTION_START);
+        spanText.removeSpan(SELECTION_START);
 //        spanText.removeSpan(SELECTION_END);
-//        spanText.setSpan(SELECTION_START, start, end,
-//                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spanText.setSpan(SELECTION_START, start, end,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 //        spanText.setSpan(SELECTION_END, start,
 //                end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-//        tv.setText(spanText, TextView.BufferType.SPANNABLE);
+        tv.setText(spanText, TextView.BufferType.SPANNABLE);
     }
 
     private void showDragger(boolean isStart, int x, int y){
@@ -347,12 +381,12 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
         if(isStart){
             layoutParams = (FrameLayout.LayoutParams) leftView.getLayoutParams();
             layoutParams.topMargin = y;
-            layoutParams.leftMargin = x - (leftView.getMeasuredWidth() / 2);
+            layoutParams.leftMargin = x + (leftView.getMeasuredWidth() / 2);
             leftView.setLayoutParams(layoutParams);
         }else{
             layoutParams = (FrameLayout.LayoutParams) rightView.getLayoutParams();
             layoutParams.topMargin = y;
-            layoutParams.leftMargin = x + (rightView.getMeasuredWidth() / 2);
+            layoutParams.leftMargin = x - (rightView.getMeasuredWidth() / 2);
             rightView.setLayoutParams(layoutParams);
         }
     }
@@ -387,6 +421,7 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
         synchronized (SelectionViewUtils.class) {
             if (isShowing()) {
                 if (viewRoot.getParent() != null && viewRoot.getParent() instanceof ViewGroup) {
+                    clearSelection();
                     final ViewGroup viewGroup = (ViewGroup) viewRoot.getParent();
                     viewGroup.removeView(viewRoot);
                 }
