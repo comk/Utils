@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Environment;
 import android.os.Process;
 import android.support.annotation.NonNull;
@@ -27,6 +28,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -38,6 +40,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.android.volley.VolleyError;
@@ -47,6 +50,7 @@ import com.mayhub.utils.common.FileUtils;
 import com.mayhub.utils.common.InputDialogUtils;
 import com.mayhub.utils.common.LoadingUtils;
 import com.mayhub.utils.common.MLogUtil;
+import com.mayhub.utils.common.PopViewUtils;
 import com.mayhub.utils.common.ToastUtils;
 import com.mayhub.utils.dialog.ImageViewerDialog;
 import com.mayhub.utils.dialog.ImageViewerUtils;
@@ -62,6 +66,7 @@ import com.mayhub.utils.volley.RequestListener;
 import com.mayhub.utils.volley.RequestParams;
 import com.mayhub.utils.widget.CusViewPager;
 import com.mayhub.utils.widget.LabelImageView;
+import com.mayhub.utils.widget.PopView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -146,6 +151,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 labelImageView.setTxtSize((int) (time % 40));
                 labelImageView.setMarginLeft((int) (time % 20));
                 labelImageView.setMarginTop((int) (time % 30));
+                TextView textView = new TextView(v.getContext());
+                textView.setTextSize(40);
+                textView.setText("4651616161");
+                textView.setBackgroundColor(Color.RED);
+                if(PopViewUtils.getInstance().canReshow()){
+                    PopViewUtils.getInstance().reshow();
+                }else {
+                    PopViewUtils.getInstance().initPopContent(LoginActivity.this, true, new String[]{
+                            "TOM", "JACK", "LUCY", "BOB"
+                    }, LinearLayout.HORIZONTAL).setAnimationDir(PopViewUtils.DIR_FROM_TOP).at(v, Gravity.BOTTOM, Gravity.CENTER);
+                }
 
             }
         });
@@ -162,31 +178,39 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         recyclerView.setAdapter(testHeadFootAdapter = new TestHeadFootAdapter());
         for (int i = 0; i < 5; i++) {
             ImageView imageView = new ImageView(getApplicationContext());
+            imageView.setBackgroundColor(Color.RED);
             imageView.setTag(i);
             imageView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    InputDialogUtils.getInstance().listener(new InputDialogUtils.AlertListenerAdapter() {
-                        @Override
-                        public void onDismiss() {
-                            super.onDismiss();
-                        }
-
-                        @Override
-                        public void onBtnClick(String text) {
-
-                        }
-
-                        @Override
-                        public void onBtnLeftClick(String text) {
-
-                        }
-
-                        @Override
-                        public void onBtnRightClick(String text) {
-                            startActivity(new Intent(getApplicationContext(), Main2ActivityProcess1.class));
-                        }
-                    }).showOptionAlert(LoginActivity.this, true, "what's your idea now ?", "input your idea here", null,"Cancel", "OK");
+                    TextView textView = new TextView(v.getContext());
+                    textView.setTextSize(40);
+                    textView.setText("4651616161");
+                    textView.setBackgroundColor(Color.RED);
+                    PopViewUtils.getInstance().initPopContent(LoginActivity.this, true, new String[]{
+                            "TOM","JACK","LUCY","BOB"
+                    }).setAnimationDir(PopViewUtils.DIR_FROM_LEFT).at(v, Gravity.RIGHT, Gravity.CENTER);
+//                    InputDialogUtils.getInstance().listener(new InputDialogUtils.AlertListenerAdapter() {
+//                        @Override
+//                        public void onDismiss() {
+//                            super.onDismiss();
+//                        }
+//
+//                        @Override
+//                        public void onBtnClick(String text) {
+//
+//                        }
+//
+//                        @Override
+//                        public void onBtnLeftClick(String text) {
+//
+//                        }
+//
+//                        @Override
+//                        public void onBtnRightClick(String text) {
+//                            startActivity(new Intent(getApplicationContext(), Main2ActivityProcess1.class));
+//                        }
+//                    }).showOptionAlert(LoginActivity.this, true, "what's your idea now ?", "input your idea here", null,"Cancel", "OK");
 //                    LoadingUtils.getInstance().showLoading(LoginActivity.this, true, "loading ...");
                 }
             });

@@ -89,7 +89,6 @@ public class CusFrameLayout extends FrameLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d(TAG, "onTouchEvent() called with: " + "event = [" + event + "]");
         if (dragView != null && dragListener != null && event.getAction() != MotionEvent.ACTION_DOWN) {
             if((event.getAction() == MotionEvent.ACTION_CANCEL || event.getAction() == MotionEvent.ACTION_UP)){
                 if(dragListener != null){
