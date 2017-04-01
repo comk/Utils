@@ -251,7 +251,7 @@ public class PopViewUtils implements View.OnClickListener, Animator.AnimatorList
     }
 
     public boolean canReshow(){
-        return parent != null && parent.get() != null;
+        return parent != null && parent.get() != null && !isShowing();
     }
 
     public void reshow(){
