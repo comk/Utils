@@ -103,6 +103,34 @@ import static android.Manifest.permission.READ_CONTACTS;
  */
 public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
 
+    private static final String TAG = "LoginActivity";
+
+    private long[] startTimes = new long[]{
+            7120,
+            12416,
+            13631,
+            14847,
+            22623,
+            24655,
+            27647,
+            29804,
+            31196,
+            34508,
+            42514,
+            45105,
+            50867,
+            53203,
+            58882,
+            60000+1552,
+            60000+5725,
+            60000+11341,
+            60000+15709,
+            60000+30956,
+            60000+32829,
+            60000+34877
+
+    };
+
     /**
      * Id to identity READ_CONTACTS permission request.
      */
@@ -136,6 +164,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private int volleyError = 0;
     private ImageViewerDialog imageViewerDialog;
     private ImageViewerUtils imageViewerUtils;
+
+    private void printDuartion(){
+        for (int i = 0; i < startTimes.length; i++) {
+            Log.e(TAG, "" + (startTimes[i + 1] - startTimes[i]));
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -169,6 +204,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         char b = 0x4e00;
         int h = c;
         Log.e("UNICODE",c + " = " + h + " b = " + b);
+
+//        printDuartion();
+        startActivity(new Intent(this, ListenActivity.class));
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();

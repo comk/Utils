@@ -1,16 +1,19 @@
 package com.mayhub.utils.common;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.PlaybackParams;
 import android.os.Build;
 import android.text.TextUtils;
 
-import com.mayhub.utils.MyApplication;
+
+import com.mayhub.utils.activity.App;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Created by comkdai on 2017/3/24.
@@ -21,11 +24,13 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
         MediaPlayer.OnPreparedListener,
         MediaPlayer.OnSeekCompleteListener{
 
+    private static final String TAG = "MediaPlayerUtils";
+
     private static final String KEY_IS_SPEED_SUPPORTED = "is_speed_supported";
 
-    private static final String KEY_IS_ENABLE_SPEED = "key_is_enable_speed";
-
     private static final String KEY_IS_START_BEFORE_SPEED = "is_start_before_speed";
+
+    private static final int DURATION_REFRESH_INTERVAL = 200;
 
     public interface PlayerListener{
         void onPrepared(String playPath, int duration);
@@ -43,8 +48,22 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
     private boolean isMediaPlayerInit = false;
     private boolean isAutoPlay = false;
     private MediaPlayer mediaPlayer;
+    private AssetFileDescriptor afd;
+    private ArrayList<String> playList = new ArrayList<>();
     private String curPath;
     private float speed = 1.0f;
+    private int refreshInterval = DURATION_REFRESH_INTERVAL;
+
+    private Runnable audioPlaying = new Runnable() {
+        @Override
+        public void run() {
+            if(playerListener != null){
+                playerListener.onPlaying(curPath, getCurrentPosition());
+            }
+            ThreadUtils.getInstance().getWorkHandler().postDelayed(this, refreshInterval);
+        }
+    };
+
     private MediaPlayerUtils(){
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnPreparedListener(this);
@@ -55,10 +74,14 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
         float defaultVolume = getSystemVolume();
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         if(defaultVolume <= 0f){
-            ToastUtils.getInstance().showShortToast(MyApplication.getInstance(), "请把音量调大");
+            ToastUtils.getInstance().showShortToast(App.getInstance(), "请把音量调大");
         }else {
             mediaPlayer.setVolume(defaultVolume, defaultVolume);
         }
+    }
+
+    public void setRefreshInterval(int refreshInterval) {
+        this.refreshInterval = refreshInterval;
     }
 
     public static MediaPlayerUtils getInstance(){
@@ -73,7 +96,7 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
     }
 
     public float getSystemVolume(){
-        AudioManager am = (AudioManager) MyApplication.getInstance().getSystemService(Context.AUDIO_SERVICE);
+        AudioManager am = (AudioManager) App.getInstance().getSystemService(Context.AUDIO_SERVICE);
         int volumeLevel = am.getStreamVolume(AudioManager.STREAM_MUSIC);
         int maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
         return (float) volumeLevel / maxVolume;
@@ -82,6 +105,15 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
     public void setAutoPlay(boolean autoPlay) {
         synchronized (MediaPlayerUtils.class) {
             isAutoPlay = autoPlay;
+            if(isAutoPlay && isMediaPlayerInit){
+                start();
+            }
+        }
+    }
+
+    public boolean isPlaying(){
+        synchronized (MediaPlayerUtils.class){
+            return mediaPlayer.isPlaying();
         }
     }
 
@@ -113,14 +145,36 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
         }
     }
 
+    public void setPlayPathList(ArrayList<String> list){
+        if(list != null){
+            playList.clear();
+            playList.addAll(list);
+            if(playList.size() > 0){
+                setPlayPath(playList.get(0));
+            }
+        }
+    }
+
+    private boolean isAssetsFile(String playPath){
+        return playPath.contains("assets://");
+    }
+
     public void setPlayPath(String playPath){
         synchronized (MediaPlayerUtils.class) {
-            if (curPath == null || curPath.equals(playPath)) {
+            if (curPath == null || !curPath.equals(playPath)) {
                 curPath = playPath;
                 try {
                     mediaPlayer.reset();
                     isMediaPlayerInit = false;
-                    mediaPlayer.setDataSource(playPath);
+                    if(afd != null){
+                        afd.close();
+                    }
+                    if(isAssetsFile(playPath)){
+                        afd = App.getInstance().getAssets().openFd(playPath.split("//")[1]);
+                        mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+                    }else{
+                        mediaPlayer.setDataSource(playPath);
+                    }
                     mediaPlayer.prepareAsync();
                 } catch (IOException e) {
                     destroy();
@@ -138,6 +192,14 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
 
     public void destroy(){
        stop();
+        if(afd != null){
+            try {
+                afd.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            afd = null;
+        }
         mediaPlayer.reset();
         mediaPlayer.release();
         playerListener = null;
@@ -199,6 +261,7 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
                         } else {
                             playerListener.onStart(curPath, mediaPlayer.getCurrentPosition());
                         }
+                        ThreadUtils.getInstance().getWorkHandler().post(audioPlaying);
                     }
                 }
             }
@@ -217,6 +280,7 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
                     if(playerListener != null){
                         playerListener.onPause(curPath, mediaPlayer.getCurrentPosition());
                     }
+                    ThreadUtils.getInstance().getWorkHandler().removeCallbacks(audioPlaying);
                 }
             }
         }
@@ -235,7 +299,7 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
                 }
             }catch (IllegalArgumentException e){
                 setSpeedNotSupported();
-                ToastUtils.getInstance().showShortToast(MyApplication.getInstance(), "请退出程序重新启动再试变速功能");
+                ToastUtils.getInstance().showShortToast(App.getInstance(), "请退出程序重新启动再试变速功能");
                 MLogUtil.p(e);
                 destroy();
             }
@@ -248,11 +312,11 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
         }catch (IllegalArgumentException e){
             MLogUtil.p(e);
             setSpeedNotSupported();
-            ToastUtils.getInstance().showShortToast(MyApplication.getInstance(), "请退出程序重新启动再试");
+            ToastUtils.getInstance().showShortToast(App.getInstance(), "请退出程序重新启动再试");
             destroy();
         }catch (IllegalStateException e){
             MLogUtil.p(e);
-            ToastUtils.getInstance().showShortToast(MyApplication.getInstance(), "音频加载失败，稍候再试");
+            ToastUtils.getInstance().showShortToast(App.getInstance(), "音频加载失败，稍候再试");
             destroy();
         }
     }
@@ -274,6 +338,8 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
                         playerListener.onStop(curPath);
                     }
                     isMediaPlayerInit = false;
+                    curPath = null;
+                    ThreadUtils.getInstance().getWorkHandler().removeCallbacks(audioPlaying);
                 }
             }
         }
@@ -282,8 +348,21 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
     @Override
     public void onCompletion(MediaPlayer mp) {
         synchronized (MediaPlayerUtils.class) {
-            if (playerListener != null) {
-                playerListener.onComplete(curPath);
+            if(playList.size() > 0) {
+                int idx = playList.indexOf(curPath);
+                if(idx == playList.size() - 1){
+                    if (playerListener != null) {
+                        playerListener.onComplete(curPath);
+                    }
+                    ThreadUtils.getInstance().getWorkHandler().removeCallbacks(audioPlaying);
+                }else{
+                    setPlayPath(playList.get(idx + 1));
+                }
+            }else {
+                if (playerListener != null) {
+                    playerListener.onComplete(curPath);
+                }
+                ThreadUtils.getInstance().getWorkHandler().removeCallbacks(audioPlaying);
             }
         }
     }
@@ -309,9 +388,11 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
             if (playerListener != null) {
                 playerListener.onPrepared(curPath, mp.getDuration());
             }
+            MLogUtil.e(TAG, "onPrepared " + curPath);
             setSpeedFeature();
             if(isAutoPlay){
                 start();
+                MLogUtil.e(TAG, "AUTO START");
             }
         }
     }
