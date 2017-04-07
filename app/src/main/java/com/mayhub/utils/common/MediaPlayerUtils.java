@@ -53,14 +53,17 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
     private String curPath;
     private float speed = 1.0f;
     private int refreshInterval = DURATION_REFRESH_INTERVAL;
-
+    private final Object lockPlaying = new Object();
     private Runnable audioPlaying = new Runnable() {
         @Override
         public void run() {
-            if(playerListener != null){
-                playerListener.onPlaying(curPath, getCurrentPosition());
+            synchronized (lockPlaying) {
+                if (playerListener != null) {
+                    playerListener.onPlaying(curPath, getCurrentPosition());
+                }
+                ThreadUtils.getInstance().getWorkHandler().removeCallbacks(this);
+                ThreadUtils.getInstance().getWorkHandler().postDelayed(this, refreshInterval);
             }
-            ThreadUtils.getInstance().getWorkHandler().postDelayed(this, refreshInterval);
         }
     };
 
@@ -256,12 +259,12 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
                         setPlaybackParamsSpeed(speed);
                     }
                     if (playerListener != null) {
+                        ThreadUtils.getInstance().getWorkHandler().post(audioPlaying);
                         if (lastPosition > 10) {
                             playerListener.onResume(curPath, mediaPlayer.getCurrentPosition());
                         } else {
                             playerListener.onStart(curPath, mediaPlayer.getCurrentPosition());
                         }
-                        ThreadUtils.getInstance().getWorkHandler().post(audioPlaying);
                     }
                 }
             }
@@ -277,10 +280,10 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
                         setStartBeforeSpeed();
                         stop();
                     }
+                    ThreadUtils.getInstance().getWorkHandler().removeCallbacks(audioPlaying);
                     if(playerListener != null){
                         playerListener.onPause(curPath, mediaPlayer.getCurrentPosition());
                     }
-                    ThreadUtils.getInstance().getWorkHandler().removeCallbacks(audioPlaying);
                 }
             }
         }
@@ -334,12 +337,12 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
             if(isMediaPlayerInit){
                 if(mediaPlayer.isPlaying()){
                     mediaPlayer.stop();
+                    ThreadUtils.getInstance().getWorkHandler().removeCallbacks(audioPlaying);
                     if(playerListener != null){
                         playerListener.onStop(curPath);
                     }
                     isMediaPlayerInit = false;
                     curPath = null;
-                    ThreadUtils.getInstance().getWorkHandler().removeCallbacks(audioPlaying);
                 }
             }
         }
@@ -351,18 +354,18 @@ public class MediaPlayerUtils implements MediaPlayer.OnCompletionListener,
             if(playList.size() > 0) {
                 int idx = playList.indexOf(curPath);
                 if(idx == playList.size() - 1){
+                    ThreadUtils.getInstance().getWorkHandler().removeCallbacks(audioPlaying);
                     if (playerListener != null) {
                         playerListener.onComplete(curPath);
                     }
-                    ThreadUtils.getInstance().getWorkHandler().removeCallbacks(audioPlaying);
                 }else{
                     setPlayPath(playList.get(idx + 1));
                 }
             }else {
+                ThreadUtils.getInstance().getWorkHandler().removeCallbacks(audioPlaying);
                 if (playerListener != null) {
                     playerListener.onComplete(curPath);
                 }
-                ThreadUtils.getInstance().getWorkHandler().removeCallbacks(audioPlaying);
             }
         }
     }

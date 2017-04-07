@@ -3,14 +3,54 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
-
-    <SeekBar
-        android:id="@+id/seek_bar"
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:max="100"
-        />
+        android:gravity="center_vertical"
+        android:padding="5dp"
+        >
+        <TextView
+            android:id="@+id/tv_start_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00:00"
+            />
+        <SeekBar
+            android:id="@+id/seek_bar"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:max="100"
+            />
+        <TextView
+            android:id="@+id/tv_end_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00:00"
+            />
+    </LinearLayout>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
+        <TextView
+            android:id="@+id/tv_loop_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <View
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            />
+        <TextView
+            android:id="@+id/tv_speed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
@@ -20,12 +60,12 @@
             android:layout_weight="1"
             android:layout_height="1dp"
             />
-        <ImageView
-            android:id="@+id/iv_sentence_loop"
+        <TextView
+            android:id="@+id/tv_sentence_loop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="10dp"
-            android:src="@drawable/exo_controls_rewind"
+            android:text="开启单句"
             />
         <View
             android:layout_width="0dp"
@@ -68,12 +108,12 @@
             android:layout_weight="1"
             android:layout_height="1dp"
             />
-        <ImageView
-            android:id="@+id/iv_passage_loop"
+        <TextView
+            android:id="@+id/tv_passage_loop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="10dp"
-            android:src="@drawable/exo_controls_fastforward"
+            android:text="开启单篇"
             />
         <View
             android:layout_width="0dp"

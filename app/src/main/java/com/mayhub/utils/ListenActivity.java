@@ -1,6 +1,7 @@
 package com.mayhub.utils;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcelable;
@@ -12,7 +13,9 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
+import android.text.style.BackgroundColorSpan;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,16 +52,13 @@ public class ListenActivity extends Activity implements View.OnClickListener{
                 if(v.getTag() != null && v.getTag() instanceof AudioSentenceBean){
                     AudioSentenceBean audioSentenceBean = (AudioSentenceBean) v.getTag();
                     PlayerUtils.getInstance().setSentenceLoopInfo(audioSentenceBean.startTime, audioSentenceBean.startTime + audioSentenceBean.duration);
-                    PlayerUtils.getInstance().seekTo((int) audioSentenceBean.startTime);
                 }
                 break;
-            case R.id.iv_passage_loop:
-                PlayerUtils.getInstance().startPassageLoop();
-                ToastUtils.getInstance().showShortToast(getApplicationContext(), "单曲循环");
+            case R.id.tv_passage_loop:
+                PlayerUtils.getInstance().togglePassageLoop();
                 break;
-            case R.id.iv_sentence_loop:
-                ToastUtils.getInstance().showShortToast(getApplicationContext(), "单句循环");
-                PlayerUtils.getInstance().startLoop();
+            case R.id.tv_sentence_loop:
+                PlayerUtils.getInstance().toggleSentenceLoop();
                 break;
         }
     }
@@ -84,10 +84,11 @@ public class ListenActivity extends Activity implements View.OnClickListener{
             "图书管理员：好的，其实，我们的大部分资料都是在网络上可用的。",
             "你可以通过图书馆的电脑，接触到心理学数据库或相关电子期刊和文章；同时，如果你想通过搜索标题关键字，如“梦想”一词，输入该词，所有包含“梦想”一词的文章将都出现在屏幕上。",
             "学生：酷,太好了！",
-            "哎呀,要是在家里也能这样做就好了。"
+            "哎呀,要是在家里也能这样做就好了。",
+            "end"
     };
 
-    private long[] startTimes = new long[]{
+    private int[] startTimes = new int[]{
             7120,
             12416,
             13631,
@@ -112,8 +113,8 @@ public class ListenActivity extends Activity implements View.OnClickListener{
             60000+34877
 
     };
-
-private long[] durationTimes = new long[]{
+private int[] endTimes = new int[22];
+private int[] durationTimes = new int[]{
         5296,
         1215,
         1216,
@@ -134,7 +135,8 @@ private long[] durationTimes = new long[]{
         4368,
         15247,
         1873,
-        2048
+        2048,
+        5000
     };
 
 
@@ -146,8 +148,8 @@ private long[] durationTimes = new long[]{
 
     public static class AudioSentenceBean{
         private String sentence;
-        private long startTime;
-        private long duration;
+        private int startTime;
+        private int duration;
     }
 
     public static class AudioParagrahBean{
@@ -164,6 +166,10 @@ private long[] durationTimes = new long[]{
     private SeekBar seekBar;
 
     private View next;
+
+    private TextView tvStart;
+    private TextView tvEnd;
+    private AudioPassageAdapter adapter;
 
     private AudioPassageBean audioPassageBean;
 
@@ -190,44 +196,58 @@ private long[] durationTimes = new long[]{
             audioSentenceBean.duration = durationTimes[i];
             audioSentenceBean.startTime = startTimes[i];
             audioSentenceBean.sentence = sentences[i];
-            if(i > durationTimes.length / 2){
-                list2.add(audioSentenceBean);
-            }else {
+            endTimes[i] = startTimes[i] + durationTimes[i];
+//            if(i > durationTimes.length / 2){
+//                list2.add(audioSentenceBean);
+//            }else {
                 list.add(audioSentenceBean);
-            }
+//            }
         }
+        PlayerUtils.getInstance().setSentenceLoopInfos(startTimes, endTimes);
         AudioParagrahBean audioPassageBean = new AudioParagrahBean();
         audioPassageBean.sentenceBeanArrayList = list;
         passages.add(audioPassageBean);
-        audioPassageBean = new AudioParagrahBean();
-        audioPassageBean.sentenceBeanArrayList = list2;
-        passages.add(audioPassageBean);
+//        audioPassageBean = new AudioParagrahBean();
+//        audioPassageBean.sentenceBeanArrayList = list2;
+//        passages.add(audioPassageBean);
     }
 
     private void initValue() {
-        recyclerView.setAdapter(new AudioPassageAdapter(passages, this));
-        PlayerUtils.getInstance().play("assets://tpo1_listening_passage1_1.mp3");
+        recyclerView.setAdapter(adapter = new AudioPassageAdapter(passages, this));
         PlayerUtils.getInstance().hookWithSeekBar(seekBar);
+        PlayerUtils.getInstance().hookWithStartTime(tvStart);
+        PlayerUtils.getInstance().hookWithEndTime(tvEnd);
+        PlayerUtils.getInstance().hookWithAdapter(adapter);
+        PlayerUtils.getInstance().play("assets://tpo1_listening_passage1_1.mp3");
     }
 
     private void initView() {
         recyclerView = (RecyclerView) findViewById(R.id.recycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.VERTICAL, false));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
+        tvStart = (TextView) findViewById(R.id.tv_start_time);
+        tvEnd = (TextView) findViewById(R.id.tv_end_time);
         start = findViewById(R.id.iv_start);
+        PlayerUtils.getInstance().hookWithPlayStatus(start, new PlayerUtils.StatusBean(R.drawable.exo_controls_play,R.drawable.exo_controls_pause));
+        PlayerUtils.getInstance().hookWithLoopCountStatus((TextView) findViewById(R.id.tv_loop_count));
+        PlayerUtils.getInstance().hookWithSpeedStatus((TextView) findViewById(R.id.tv_speed));
         seekBar = (SeekBar) findViewById(R.id.seek_bar);
         start.setOnClickListener(this);
         pre = findViewById(R.id.iv_pre);
         pre.setOnClickListener(this);
         next = findViewById(R.id.iv_next);
         next.setOnClickListener(this);
-        findViewById(R.id.iv_passage_loop).setOnClickListener(this);
-        findViewById(R.id.iv_sentence_loop).setOnClickListener(this);
+        findViewById(R.id.tv_passage_loop).setOnClickListener(this);
+        findViewById(R.id.tv_sentence_loop).setOnClickListener(this);
+        PlayerUtils.getInstance().hookWithSententeceLoopStatus(findViewById(R.id.tv_sentence_loop), new PlayerUtils.StatusBean("开启单句", "关闭单句"));
+        PlayerUtils.getInstance().hookWithPassageLoopStatus(findViewById(R.id.tv_passage_loop), new PlayerUtils.StatusBean("开启单篇", "关闭单篇"));
     }
 
-    private static class AudioPassageAdapter extends LoadMoreRecyclerAdapter{
+    public static class AudioPassageAdapter extends LoadMoreRecyclerAdapter{
 
         private ArrayList<AudioParagrahBean> data = new ArrayList<>();
+
+        private int showIndex = -1;
 
         private View.OnClickListener onClickListener;
 
@@ -238,6 +258,14 @@ private long[] durationTimes = new long[]{
 
         public AudioPassageAdapter(ArrayList<AudioParagrahBean> data) {
             this.data = data;
+        }
+
+        public void updateShowIndex(int index){
+            if(index != showIndex){
+                Log.e(TAG, "updateShowIndex() called with: " + "index = [" + index + "]");
+                showIndex = index;
+                notifyDataSetChanged();
+            }
         }
 
         @Override
@@ -262,15 +290,18 @@ private long[] durationTimes = new long[]{
         @Override
         public void onBindChildViewHolder(RecyclerView.ViewHolder holder, int position) {
             if(holder.itemView instanceof TextView){
-                if(data.get(position).span == null){
+//                if(data.get(position).span == null){
                     SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
                     ArrayList<AudioSentenceBean> list = data.get(position).sentenceBeanArrayList;
                     for (int i = 0; i < list.size(); i++) {
                         spannableStringBuilder.append(list.get(i).sentence);
                         spannableStringBuilder.setSpan(new CusClickSpan(list.get(i), onClickListener), spannableStringBuilder.length() - list.get(i).sentence.length(), spannableStringBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        if(showIndex == i) {
+                            spannableStringBuilder.setSpan(new BackgroundColorSpan(Color.CYAN), spannableStringBuilder.length() - list.get(i).sentence.length(), spannableStringBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        }
                     }
                     data.get(position).span = spannableStringBuilder;
-                }
+//                }
                 ((TextView) holder.itemView).setText(data.get(position).span);
             }
         }

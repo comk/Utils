@@ -1,5 +1,6 @@
 package com.mayhub.utils.common;
 
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -19,10 +20,12 @@ public class TimeUtils {
     public static final long TIME_MILLS_DAY = 24 * TIME_MILLS_HOUR;
     public static final long TIME_MILLS_MONTH = 30 * TIME_MILLS_DAY;
     public static final long TIME_MILLS_YEAR = 12 * TIME_MILLS_MONTH;
-
+    private static final String FORMAT_TIME = "%s:%s:%s";
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyy-MM-dd", Locale.US);
 
     private SimpleDateFormat simpleDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+
+    private DecimalFormat decimalFormat = new DecimalFormat("00");
 
     private Calendar calendar = Calendar.getInstance(Locale.US);
 
@@ -293,6 +296,15 @@ public class TimeUtils {
         }else{
             return String.format("0%s",args);
         }
+    }
+
+    public String getPlayTime(long currTime){
+        int seconds = (int) (currTime/1000);
+        int minutes = seconds / 60;
+        int hours = minutes / 60;
+        seconds = seconds % 60;
+        minutes = minutes % 60;
+        return String.format(FORMAT_TIME, decimalFormat.format(hours), decimalFormat.format(minutes), decimalFormat.format(seconds));
     }
 
     public String formatTimeDataInMills(long timeMills){
