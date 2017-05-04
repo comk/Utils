@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.text.Layout;
 import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.style.BackgroundColorSpan;
 import android.util.Log;
@@ -128,20 +129,20 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
     }
 
     private void initTextViewSelectionArea(TextView view, float rawX, float rawY){
-        view.getHitRect(rect);
-        int[] viewLocation = new int[2];
-        view.getLocationOnScreen(viewLocation);
-        rect.right = viewLocation[0] + (rect.right - rect.left);
-        rect.bottom = viewLocation[1] + (rect.bottom - rect.top);
-        rect.left = viewLocation[0];
-        rect.top = viewLocation[1];
+        view.getGlobalVisibleRect(rect);
+//        int[] viewLocation = new int[2];
+//        view.getLocationOnScreen(viewLocation);
+//        rect.right = viewLocation[0] + (rect.right - rect.left);
+//        rect.bottom = viewLocation[1] + (rect.bottom - rect.top);
+//        rect.left = viewLocation[0];
+//        rect.top = viewLocation[1];
         if(rect.contains((int)rawX,(int)rawY)){
             Layout layout = view.getLayout();
             if(layout != null && !TextUtils.isEmpty(view.getText().toString().trim())) {
                 int line = layout.getLineForVertical((int) (rawY - rect.top - view.getPaddingTop()));
                 int offset = layout.getOffsetForHorizontal(line, rawX - rect.left - view.getPaddingLeft());
-                primaryHori = layout.getPrimaryHorizontal(offset);
-                secondaryHori = layout.getPrimaryHorizontal(offset+5);
+                primaryHori = layout.getPrimaryHorizontal(offset);// + rect.left + view.getPaddingLeft();
+                secondaryHori = layout.getPrimaryHorizontal(offset+5);// + rect.left + view.getPaddingLeft();
                 if(offset >= 0) {
                     startLast = offset;
                     endLast = offset + 5;
@@ -288,15 +289,26 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
     private void clearSelection(){
         TextView tvSelection = tvSelectionRef.get();
         if(tvSelection != null){
-            Spannable spanText = (Spannable) tvSelection.getText();
+            Spannable spanText = getSpanText(tvSelection);
             spanText.removeSpan(SELECTION_START);
+        }
+    }
+
+    private Spannable getSpanText(TextView tv){
+        if(tv.getText() instanceof SpannableString) {
+            return new Spannable.Factory().newSpannable(tv.getText());
+        }else if(tv.getText() instanceof Spannable){
+            return new Spannable.Factory().newSpannable(tv.getText());
+        }else{
+            return Spannable.Factory.getInstance().newSpannable(
+                    tv.getText().toString());
         }
     }
 
     private void showSelectionArea(TextView tv, int start, int end){
         startLast = start;
         endLast = end;
-        Spannable spanText = (Spannable) tv.getText();
+        Spannable spanText = getSpanText(tv);
         spanText.removeSpan(SELECTION_START);
         spanText.setSpan(SELECTION_START, start, end,
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
