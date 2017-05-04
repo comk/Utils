@@ -19,7 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".ListenActivity"
+            android:name=".TestTabActivity"
             android:hardwareAccelerated="true"
             android:label="@string/title_activity_login">
             <intent-filter>

@@ -139,7 +139,7 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
             Layout layout = view.getLayout();
             if(layout != null && !TextUtils.isEmpty(view.getText().toString().trim())) {
                 int line = layout.getLineForVertical((int) (rawY - rect.top - view.getPaddingTop()));
-                int offset = layout.getOffsetForHorizontal(line, rawX - rect.left - view.getPaddingLeft()) - 1;
+                int offset = layout.getOffsetForHorizontal(line, rawX - rect.left - view.getPaddingLeft());
                 primaryHori = layout.getPrimaryHorizontal(offset);
                 secondaryHori = layout.getPrimaryHorizontal(offset+5);
                 if(offset >= 0) {
@@ -162,7 +162,7 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
             Layout layout = view.getLayout();
             if(layout != null && !TextUtils.isEmpty(view.getText().toString().trim())) {
                 int line = layout.getLineForVertical((int) (rawY - rect.top - view.getPaddingTop()));
-                int offset = layout.getOffsetForHorizontal(line, rawX - rect.left - view.getPaddingLeft()) - 1;
+                int offset = layout.getOffsetForHorizontal(line, rawX - rect.left - view.getPaddingLeft());
                 if(offset >= 0) {
                     int top = rect.top + view.getPaddingTop() + ((line + 1) * lineHeight);
                     if(isStart){
@@ -310,17 +310,17 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
             layoutParams.topMargin = y;
             layoutParams.leftMargin = x - (leftView.getMeasuredWidth() / 2);
             leftView.setLayoutParams(layoutParams);
-            if(!rect.contains(layoutParams.leftMargin, layoutParams.topMargin)){
+            if(!rect.contains(rect.centerX(), layoutParams.topMargin)){
                 leftView.setVisibility(View.INVISIBLE);
             }else {
                 leftView.setVisibility(View.VISIBLE);
             }
         }else{
             layoutParams = (FrameLayout.LayoutParams) rightView.getLayoutParams();
-            layoutParams.topMargin = y;
+            layoutParams.topMargin = y - 1;
             layoutParams.leftMargin = x - (rightView.getMeasuredWidth() / 2);
             rightView.setLayoutParams(layoutParams);
-            if(!rect.contains(layoutParams.leftMargin, layoutParams.topMargin)){
+            if(!rect.contains(rect.centerX(), layoutParams.topMargin)){
                 rightView.setVisibility(View.INVISIBLE);
             }else{
                 rightView.setVisibility(View.VISIBLE);
@@ -380,8 +380,10 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
                 if(tvSelection != null) {
                     showSelectionArea(tvSelection, 0, tvSelection.getText().length());
                     Layout layout = tvSelection.getLayout();
+                    int line = layout.getLineForVertical(0 - tvSelection.getPaddingTop());
+                    int top2 = rect.top + tvSelection.getPaddingTop() + ((line + 1) * lineHeight);
                     secondaryHori = layout.getPrimaryHorizontal(startLast) + rect.left + tvSelection.getPaddingLeft();
-                    showDragger(true, (int) secondaryHori, rect.top);
+                    showDragger(true, (int) secondaryHori, top2);
                     secondaryHori = layout.getPrimaryHorizontal(endLast) + rect.left + tvSelection.getPaddingLeft();
                     showDragger(false, (int) secondaryHori, rect.bottom);
                 }

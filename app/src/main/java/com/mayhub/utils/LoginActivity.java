@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Environment;
+import android.os.Messenger;
 import android.os.Process;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -88,6 +89,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import okhttp3.FormBody;
 import okhttp3.MediaType;
@@ -206,7 +208,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         Log.e("UNICODE",c + " = " + h + " b = " + b);
 
 //        printDuartion();
-        startActivity(new Intent(this, ListenActivity.class));
+//        startActivity(new Intent(this, ListenActivity.class));
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
