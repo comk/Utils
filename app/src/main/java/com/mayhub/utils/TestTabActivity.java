@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 
 import com.mayhub.utils.activity.BaseTabActivity;
+import com.mayhub.utils.widget.ExerciseRecordFragment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,7 +14,7 @@ import java.util.Arrays;
  */
 public class TestTabActivity extends BaseTabActivity {
 
-    Class[] clazz = new Class[]{TestFragment1.class, TestFragment2.class, TestFragment3.class};
+    Class[] clazz = new Class[]{TestFragment1.class, TestFragment2.class, ExerciseRecordFragment.class};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
