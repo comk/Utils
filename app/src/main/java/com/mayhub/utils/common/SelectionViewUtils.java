@@ -130,23 +130,15 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
 
     private void initTextViewSelectionArea(TextView view, float rawX, float rawY){
         view.getGlobalVisibleRect(rect);
-//        int[] viewLocation = new int[2];
-//        view.getLocationOnScreen(viewLocation);
-//        rect.right = viewLocation[0] + (rect.right - rect.left);
-//        rect.bottom = viewLocation[1] + (rect.bottom - rect.top);
-//        rect.left = viewLocation[0];
-//        rect.top = viewLocation[1];
         if(rect.contains((int)rawX,(int)rawY)){
             Layout layout = view.getLayout();
             if(layout != null && !TextUtils.isEmpty(view.getText().toString().trim())) {
                 int line = layout.getLineForVertical((int) (rawY - rect.top - view.getPaddingTop()));
                 int offset = layout.getOffsetForHorizontal(line, rawX - rect.left - view.getPaddingLeft());
-                primaryHori = layout.getPrimaryHorizontal(offset);// + rect.left + view.getPaddingLeft();
-                secondaryHori = layout.getPrimaryHorizontal(offset+5);// + rect.left + view.getPaddingLeft();
+                showSelectionArea(view, offset, offset + 5);
+                primaryHori = layout.getPrimaryHorizontal(startLast) + rect.left + view.getPaddingLeft();
+                secondaryHori = layout.getPrimaryHorizontal(endLast) + rect.left + view.getPaddingLeft();
                 if(offset >= 0) {
-                    startLast = offset;
-                    endLast = offset + 5;
-                    showSelectionArea(view, offset, offset + 5);
                     int top = rect.top + view.getPaddingTop() + ((line + 1) * lineHeight);
                     showDragger(true, (int) primaryHori, top);
                     showDragger(false, (int) secondaryHori, top);
@@ -306,8 +298,8 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
     }
 
     private void showSelectionArea(TextView tv, int start, int end){
-        startLast = start;
-        endLast = end;
+        startLast = Math.max(start, 0);
+        endLast = Math.min(end, tv.getText().length());
         Spannable spanText = getSpanText(tv);
         spanText.removeSpan(SELECTION_START);
         spanText.setSpan(SELECTION_START, start, end,
@@ -315,7 +307,20 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
         tv.setText(spanText, TextView.BufferType.SPANNABLE);
     }
 
-    private void showDragger(boolean isStart, int x, int y){
+    private void showDragger(final boolean isStart, final int x, final int y){
+        if(leftView.getMeasuredWidth() == 0){
+            leftView.post(new Runnable() {
+                @Override
+                public void run() {
+                    setDrager(isStart, y, x);
+                }
+            });
+        }else{
+            setDrager(isStart, y, x);
+        }
+    }
+
+    private void setDrager(boolean isStart, int y, int x) {
         FrameLayout.LayoutParams layoutParams;
         if(isStart){
             layoutParams = (FrameLayout.LayoutParams) leftView.getLayoutParams();

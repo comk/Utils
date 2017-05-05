@@ -15,6 +15,8 @@ public class CusFrameLayout extends FrameLayout {
 
     private static final String TAG = "CusFrameLayout";
 
+    private static final int AREA_SIZE = 100;
+
     public interface DragListener{
         void onDrag(float x, float y, boolean isStart);
         void dragEnd(float y, int viewId);
@@ -61,6 +63,7 @@ public class CusFrameLayout extends FrameLayout {
     private boolean isPressedDrag(float x, float y){
         if(viewLeft != null){
             viewLeft.getHitRect(rect);
+            rect.set(rect.left - AREA_SIZE, rect.top - AREA_SIZE, rect.right, rect.bottom + AREA_SIZE);
             if(rect.contains((int)x, (int)y)){
                 dragView = viewLeft;
                 return true;
@@ -68,6 +71,7 @@ public class CusFrameLayout extends FrameLayout {
         }
         if(viewRight != null){
             viewRight.getHitRect(rect);
+            rect.set(rect.left, rect.top - AREA_SIZE, rect.right + AREA_SIZE, rect.bottom + AREA_SIZE);
             if(rect.contains((int)x, (int)y)){
                 dragView = viewRight;
                 return true;
