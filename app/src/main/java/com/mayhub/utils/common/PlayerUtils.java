@@ -8,19 +8,26 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.mayhub.utils.ListenActivity;
+import com.mayhub.utils.speed.IMediaPlayer;
+import com.mayhub.utils.speed.TrackUtils;
 
 import java.lang.ref.WeakReference;
 
 /**
  * Created by comkdai on 2017/4/6.
  */
-public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
+public class PlayerUtils implements IMediaPlayer.PlayerListener{
     private static final String TAG = "PlayerUtils";
+    private static final String KEY_MEDIA_TYPE = "key_media_type";
+    private static final int MEDIA_TYPE_DEFAULT = 0;
+    private static final int MEDIA_TYPE_SYSTEM_WITH_SPEED = 1;
+    private static final int MEDIA_TYPE_THIRD_PART = 2;
     private static final int[] LOOP_COUNTS = new int[]{2,5,10,Integer.MAX_VALUE};
     private static PlayerUtils instance;
     private SparseIntArray loopStartTimes = new SparseIntArray();
     private SparseIntArray loopEndTimes = new SparseIntArray();
     private SparseIntArray loopCounts = new SparseIntArray(2);
+    private IMediaPlayer mediaPlayer;
     private int loopStartTime;
     private int loopEndTime;
     private boolean isPassageLooping = false;
@@ -61,8 +68,22 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
         int offResId;
     }
 
+    public static void setMediaType(int mediaType){
+        LocalValueUtils.getInstance().saveInt(KEY_MEDIA_TYPE, mediaType);
+    }
+
+    public static int getMediaType(){
+        return LocalValueUtils.getInstance().getInt(KEY_MEDIA_TYPE, 0);
+    }
+
     private PlayerUtils(){
-        MediaPlayerUtils.getInstance().setPlayerListener(this);
+        int mediaType = getMediaType();
+        if(mediaType == 0){
+//            mediaPlayer = MediaPlayerUtils.getInstance();
+        }else if(mediaType == 2){
+            mediaPlayer = TrackUtils.getInstance();
+        }
+        mediaPlayer.setPlayerListener(this);
     }
 
     public static PlayerUtils getInstance() {
@@ -77,8 +98,8 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
     }
 
     public void play(String path, boolean isAutoPlay){
-        MediaPlayerUtils.getInstance().setAutoPlay(isAutoPlay);
-        MediaPlayerUtils.getInstance().setPlayPath(path);
+        mediaPlayer.setAutoPlay(isAutoPlay);
+        mediaPlayer.setPlayPath(path);
     }
 
     public void hookWithAdapter(ListenActivity.AudioPassageAdapter adapter){
@@ -139,7 +160,7 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
     }
 
     private void updatePlayStatus(){
-        updateStatus(refPlay, playStatusBean, MediaPlayerUtils.getInstance().isPlaying());
+        updateStatus(refPlay, playStatusBean, mediaPlayer.isPlaying());
     }
 
     private void updateStatus(WeakReference<View> ref, final StatusBean statusBean, final boolean isTrue){
@@ -198,7 +219,7 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if(fromUser){
-                    updateStartTime(progress * MediaPlayerUtils.getInstance().getDuration() / 100);
+                    updateStartTime(progress * mediaPlayer.getDuration() / 100);
                 }
             }
 
@@ -211,7 +232,7 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
             public void onStopTrackingTouch(SeekBar seekBar) {
                 seekBar.setTag(null);
                 if(seekBar.getTag() == null){
-                    MediaPlayerUtils.getInstance().seekTo(seekBar.getProgress() * MediaPlayerUtils.getInstance().getDuration() / 100);
+                    mediaPlayer.seekTo(seekBar.getProgress() * mediaPlayer.getDuration() / 100);
                 }
             }
         });
@@ -230,29 +251,29 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
     }
 
     public void seekTo(int position){
-        MediaPlayerUtils.getInstance().seekTo(position);
+        mediaPlayer.seekTo(position);
     }
 
     public void switchPlayOrPause(){
-        if(MediaPlayerUtils.getInstance().isPlaying()) {
-            MediaPlayerUtils.getInstance().pause();
+        if(mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
         }else{
-            MediaPlayerUtils.getInstance().start();
+            mediaPlayer.start();
         }
     }
 
     public void addSpeed(float speed){
-        MediaPlayerUtils.getInstance().setSpeed(MediaPlayerUtils.getInstance().getSpeed() + speed);
+        mediaPlayer.setSpeed(mediaPlayer.getSpeed() + speed);
         updateSpeedStatus();
     }
 
     public void subSpeed(float speed){
-        MediaPlayerUtils.getInstance().setSpeed(MediaPlayerUtils.getInstance().getSpeed() - speed);
+        mediaPlayer.setSpeed(mediaPlayer.getSpeed() - speed);
         updateSpeedStatus();
     }
 
     private int findCurrentStartTimeIndex(){
-        final int currentPos = MediaPlayerUtils.getInstance().getCurrentPosition();
+        final int currentPos = mediaPlayer.getCurrentPosition();
         for (int i = loopStartTimes.size() - 1; i < loopStartTimes.size(); i--) {
             if(currentPos > loopStartTimes.get(i)){
                 return i;
@@ -267,13 +288,13 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
         updateAdapter(index);
         loopStartTime = loopStartTimes.get(index);
         loopEndTime = loopEndTimes.get(index);
-        MediaPlayerUtils.getInstance().setRefreshInterval(10);
+        mediaPlayer.setRefreshInterval(10);
     }
 
     public boolean toggleSentenceLoop(){
         if(isSentenceLooping){
             isSentenceLooping = false;
-            MediaPlayerUtils.getInstance().setRefreshInterval(200);
+            mediaPlayer.setRefreshInterval(200);
         }else{
             startSentenceLoop();
             updateLoopStatus();
@@ -295,7 +316,7 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
     private void startPassageLoop(){
         isPassageLooping = true;
         isSentenceLooping = false;
-        MediaPlayerUtils.getInstance().setRefreshInterval(200);
+        mediaPlayer.setRefreshInterval(200);
     }
 
     public void setSentenceLoopInfos(int[] startTimes, int[] endTimes){
@@ -311,7 +332,7 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
         if(isSentenceLooping) {
             final int index = loopStartTimes.indexOfValue(startTime);
             updateAdapter(index);
-            final int currentPos = MediaPlayerUtils.getInstance().getCurrentPosition();
+            final int currentPos = mediaPlayer.getCurrentPosition();
             if (currentPos > endTime || currentPos < startTime){
                 seekTo(startTime);
             }
@@ -328,7 +349,7 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
         isPassageLooping = false;
         loopCounts.clear();
         isSentenceLooping = false;
-        MediaPlayerUtils.getInstance().setRefreshInterval(200);
+        mediaPlayer.setRefreshInterval(200);
     }
 
     private void updateLoopStatus(){
@@ -352,7 +373,7 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
                 textView.post(new Runnable() {
                     @Override
                     public void run() {
-                        textView.setText(String.format("当前语速：%s倍", MediaPlayerUtils.getInstance().getSpeed()));
+                        textView.setText(String.format("当前语速：%s倍", mediaPlayer.getSpeed()));
                     }
                 });
             }
@@ -370,7 +391,7 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
                     loopEndTime = loopEndTimes.get(index + 1);
                     updateAdapter(index + 1);
                 }else{
-                    MediaPlayerUtils.getInstance().pause();
+                    mediaPlayer.pause();
                 }
             }else {
                 loopCounts.put(loopStartTime, count + 1);
@@ -405,7 +426,7 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
 
     @Override
     public void onSeekComplete(String playPath, int seekPosition) {
-        updateSeekBar(MediaPlayerUtils.getInstance().getDuration(), seekPosition);
+        updateSeekBar(mediaPlayer.getDuration(), seekPosition);
     }
 
     @Override
@@ -414,7 +435,7 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
             prepareForLoopCount();
             seekTo(loopStartTime);
         }
-        updateSeekBar(MediaPlayerUtils.getInstance().getDuration(), MediaPlayerUtils.getInstance().getCurrentPosition());
+        updateSeekBar(mediaPlayer.getDuration(), mediaPlayer.getCurrentPosition());
     }
 
     @Override
@@ -446,7 +467,7 @@ public class PlayerUtils implements MediaPlayerUtils.PlayerListener{
     }
 
     public void destroy(){
-        MediaPlayerUtils.getInstance().destroy();
+        mediaPlayer.destroy();
         clearWeakRef(refEndTime);
         clearWeakRef(refSeekBar);
         clearWeakRef(refStartTime);

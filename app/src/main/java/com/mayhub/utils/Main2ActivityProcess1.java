@@ -35,9 +35,9 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.mayhub.utils.common.LocalValueUtils;
-import com.mayhub.utils.common.MediaPlayerUtils;
 import com.mayhub.utils.feature.BehaviorDemo;
 import com.mayhub.utils.feature.ScrollingActivity;
+import com.mayhub.utils.speed.TrackUtils;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -102,7 +102,7 @@ public class Main2ActivityProcess1 extends AppCompatActivity implements View.OnC
         findViewById(R.id.tv_volume_add).setOnClickListener(this);
         findViewById(R.id.tv_volume_sub).setOnClickListener(this);
         LocalValueUtils.initInstance(getApplicationContext());
-
+        TrackUtils.getInstance().setPlayPath("assets://tpo1_listening_direction1.mp3");
 //        findViewById(R.id.tv).setOnClickListener(new View.OnClickListener() {
 //            @Override
 //            public void onClick(View v) {
@@ -112,7 +112,7 @@ public class Main2ActivityProcess1 extends AppCompatActivity implements View.OnC
 //                LocalValueUtils.getInstance().save("String", "Main2ActivityProcess1");
 //                LocalValueUtils.destroyInstance();
 //                startActivity(new Intent(getApplicationContext(), BehaviorDemo.class));
-
+//
 //                mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
 //                    @Override
 //                    public void onPrepared(MediaPlayer mp) {
@@ -134,9 +134,9 @@ public class Main2ActivityProcess1 extends AppCompatActivity implements View.OnC
 //                    fis.close();
 //                    mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
 //                    mediaPlayer.prepareAsync();
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
+
+
+//                /
 //                player.prepare(buildMediaSource(Uri.fromFile(new File(getCacheDir(), "music.mp3")), null));
 
 
@@ -184,67 +184,25 @@ public class Main2ActivityProcess1 extends AppCompatActivity implements View.OnC
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.tv_play:
-                MediaPlayerUtils.getInstance().start();
+                TrackUtils.getInstance().start();
                 break;
             case R.id.tv_destroy:
-                MediaPlayerUtils.getInstance().destroy();
+                TrackUtils.getInstance().destroy();
                 break;
             case R.id.tv_pause:
-                MediaPlayerUtils.getInstance().pause();
+                TrackUtils.getInstance().pause();
                 break;
             case R.id.tv_stop:
-                MediaPlayerUtils.getInstance().stop();
+                TrackUtils.getInstance().stop();
                 break;
             case R.id.tv_volume_add:
-                MediaPlayerUtils.getInstance().setSpeed(MediaPlayerUtils.getInstance().getSpeed() + 0.1f);
+                TrackUtils.getInstance().setSpeed(TrackUtils.getInstance().getSpeed() + 0.1f);
                 break;
             case R.id.tv_volume_sub:
-                MediaPlayerUtils.getInstance().setSpeed(MediaPlayerUtils.getInstance().getSpeed() - 0.1f);
+                TrackUtils.getInstance().setSpeed(TrackUtils.getInstance().getSpeed() - 0.1f);
                 break;
             case R.id.set_speed:
-                MediaPlayerUtils.getInstance().setPlayPath(new File(getCacheDir(), "music.mp3"));
-                MediaPlayerUtils.getInstance().setAutoPlay(true);
-                MediaPlayerUtils.getInstance().setPlayerListener(new MediaPlayerUtils.PlayerListener() {
-                    @Override
-                    public void onPrepared(String playPath, int duration) {
-                        Log.d(TAG, "onPrepared() called with: " + "playPath = [" + playPath + "], duration = [" + duration + "]");
-                    }
-
-                    @Override
-                    public void onStart(String playPath, int curPosition) {
-                        Log.d(TAG, "onStart() called with: " + "playPath = [" + playPath + "], curPosition = [" + curPosition + "]");
-                    }
-
-                    @Override
-                    public void onPause(String playPath, int curPosition) {
-                        Log.d(TAG, "onPause() called with: " + "playPath = [" + playPath + "], curPosition = [" + curPosition + "]");
-                    }
-
-                    @Override
-                    public void onSeekComplete(String playPath, int seekPosition) {
-                        Log.d(TAG, "onSeekComplete() called with: " + "playPath = [" + playPath + "], seekPosition = [" + seekPosition + "]");
-                    }
-
-                    @Override
-                    public void onPlaying(String playPath, int curPosition) {
-                        Log.d(TAG, "onPlaying() called with: " + "playPath = [" + playPath + "], curPosition = [" + curPosition + "]");
-                    }
-
-                    @Override
-                    public void onResume(String playPath, int curPosition) {
-                        Log.d(TAG, "onResume() called with: " + "playPath = [" + playPath + "], curPosition = [" + curPosition + "]");
-                    }
-
-                    @Override
-                    public void onStop(String playPath) {
-                        Log.d(TAG, "onStop() called with: " + "playPath = [" + playPath + "]");
-                    }
-
-                    @Override
-                    public void onComplete(String playPath) {
-                        Log.d(TAG, "onComplete() called with: " + "playPath = [" + playPath + "]");
-                    }
-                });
+                TrackUtils.getInstance().setSpeed(1.5f);
                 break;
         }
     }

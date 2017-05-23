@@ -7,11 +7,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Environment;
-import android.os.Messenger;
 import android.os.Process;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
 
@@ -46,12 +46,10 @@ import android.widget.TextView;
 
 import com.android.volley.VolleyError;
 import com.mayhub.utils.adapter.BasePagerAdapter;
-import com.mayhub.utils.common.AlertUtils;
 import com.mayhub.utils.common.FileUtils;
-import com.mayhub.utils.common.InputDialogUtils;
-import com.mayhub.utils.common.LoadingUtils;
 import com.mayhub.utils.common.MLogUtil;
 import com.mayhub.utils.common.PopViewUtils;
+import com.mayhub.utils.common.TextUtil;
 import com.mayhub.utils.common.ToastUtils;
 import com.mayhub.utils.dialog.ImageViewerDialog;
 import com.mayhub.utils.dialog.ImageViewerUtils;
@@ -67,7 +65,6 @@ import com.mayhub.utils.volley.RequestListener;
 import com.mayhub.utils.volley.RequestParams;
 import com.mayhub.utils.widget.CusViewPager;
 import com.mayhub.utils.widget.LabelImageView;
-import com.mayhub.utils.widget.PopView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -89,7 +86,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import okhttp3.FormBody;
 import okhttp3.MediaType;
@@ -206,9 +202,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         char b = 0x4e00;
         int h = c;
         Log.e("UNICODE",c + " = " + h + " b = " + b);
-
+        TextUtil.test();
 //        printDuartion();
-//        startActivity(new Intent(this, ListenActivity.class));
+        startActivity(new Intent(this, Main2ActivityProcess1.class));
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
@@ -223,13 +219,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             imageView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    ViewCompat.offsetTopAndBottom(v, 50 - (v.getTop() - v.getTop()));
                     TextView textView = new TextView(v.getContext());
                     textView.setTextSize(40);
                     textView.setText("4651616161");
                     textView.setBackgroundColor(Color.RED);
-                    PopViewUtils.getInstance().initPopContent(LoginActivity.this, true, new String[]{
-                            "TOM","JACK","LUCY","BOB"
-                    }).setAnimationDir(PopViewUtils.DIR_FROM_LEFT).at(v, Gravity.RIGHT, Gravity.CENTER);
+//                    PopViewUtils.getInstance().initPopContent(LoginActivity.this, true, new String[]{
+//                            "TOM","JACK","LUCY","BOB"
+//                    }).setAnimationDir(PopViewUtils.DIR_FROM_LEFT).at(v, Gravity.RIGHT, Gravity.CENTER);
 //                    InputDialogUtils.getInstance().listener(new InputDialogUtils.AlertListenerAdapter() {
 //                        @Override
 //                        public void onDismiss() {
@@ -317,6 +314,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }));
 
         Log.e("Build",String.format("Device = %s , Model = %s, SDK_INT = %s, RELEASE = %s",Build.DEVICE, Build.MODEL, Build.VERSION.SDK_INT, Build.VERSION.RELEASE));
+        Log.e("Build",String.format("MANUFACTURER = %s , BOARD = %s, BRAND = %s, ID = %s",Build.MANUFACTURER, Build.BOARD, Build.BRAND, Build.ID));
+//        Log.e("Build",String.format("CODENAME = %s , SDK = %s, SDK_INT = %s, SECURITY_PATCH = %s",Build.VERSION.CODENAME, Build.VERSION.SDK, Build.VERSION.SDK_INT, Build.VERSION.SECURITY_PATCH));
 
 
 
