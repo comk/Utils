@@ -4,17 +4,28 @@ import android.text.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by comkdai on 2017/5/15.
  */
 public class ReciteUtils {
 
+    interface ReciteListener{
+        void onRecite(String word, boolean isRight);
+        void onIllegal(List<String> illegalList);
+        boolean filter(String word);
+    }
+
     private static ReciteUtils instance;
 
-    private ArrayList<String> list = new ArrayList<>();
+    private ArrayList<String> candidate = new ArrayList<>();
 
-    private ArrayList<String> listAgain = new ArrayList<>();
+    private ArrayList<String> wrong = new ArrayList<>();
+
+    private String reciteWord;
+
+    private ReciteListener reciteListener;
 
     private ReciteUtils(){
 
@@ -32,46 +43,62 @@ public class ReciteUtils {
     }
 
     public void initReciteList(ArrayList<String> reciteList){
-        list.clear();
-        list.addAll(reciteList);
+        filterReciteList(reciteList);
+        candidate.clear();
+        candidate.addAll(reciteList);
+    }
+
+    private void filterReciteList(ArrayList<String> reciteList){
+        if(reciteListener != null){
+            List<String> illegalList = new ArrayList<>();
+            for (String word :
+                    reciteList) {
+                if (reciteListener.filter(word)) {
+                    illegalList.add(word);
+                }
+            }
+            if(illegalList.size() > 0){
+                reciteListener.onIllegal(illegalList);
+                for (String word:illegalList) {
+                    reciteList.remove(word);
+                }
+            }
+        }
+    }
+
+    public void setReciteListener(ReciteListener reciteListener) {
+        this.reciteListener = reciteListener;
     }
 
     public String reciteNext(){
-        if(list.size() > 0){
-            Collections.shuffle(list);
-            return list.get(list.size() - 1);
+        reciteWord = null;
+        if(candidate.size() > 0){
+            Collections.shuffle(candidate);
+            reciteWord = candidate.get(candidate.size() - 1);
         }
-        if(listAgain.size() > 0){
-            Collections.shuffle(listAgain);
-            return listAgain.get(listAgain.size() - 1);
+        if(wrong.size() > 0){
+            Collections.shuffle(wrong);
+            reciteWord = wrong.get(wrong.size() - 1);
         }
-        return null;
+        return reciteWord;
     }
 
-    public String reciteWithGetNext(String word, boolean isRight){
-        list.remove(word);
-        listAgain.remove(word);
+    public String reciteWithGetNext(boolean isRight){
+        final String word = reciteWord;
+        candidate.remove(word);
+        wrong.remove(word);
         String next = reciteNext();
         if(!isRight){
-            listAgain.add(word);
+            wrong.add(word);
         }
-        save(word, isRight);
+        if(reciteListener != null){
+            reciteListener.onRecite(word, isRight);
+        }
         if(TextUtils.isEmpty(next)){
-            return word;
+            return reciteNext();
         }else {
             return next;
         }
-    }
-
-    private void save(String word, boolean isRight){
-
-    }
-
-    static class ReciteBean{
-        private String word;
-        private int rightCount;
-        private int wrongCount;
-        private float lastAccuracy;
     }
 
 }

@@ -2,8 +2,10 @@ package com.mayhub.utils;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
 
 import com.mayhub.utils.activity.BaseTabActivity;
+import com.mayhub.utils.activity.BaseTextSelectionActivity;
 import com.mayhub.utils.widget.ExerciseRecordFragment;
 
 import java.util.ArrayList;
@@ -12,13 +14,18 @@ import java.util.Arrays;
 /**
  * Created by comkdai on 2017/5/4.
  */
-public class TestTabActivity extends BaseTabActivity {
+public class TestTabActivity extends BaseTextSelectionActivity {
 
     Class[] clazz = new Class[]{TestFragment1.class, TestFragment2.class, ExerciseRecordFragment.class};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    protected View getCurrentVisibleView() {
+        return getWindow().getDecorView();
     }
 
     @Override

@@ -59,6 +59,7 @@ import com.mayhub.utils.download.FileDownloaderManager;
 import com.mayhub.utils.download.MultiDownloadTask;
 import com.mayhub.utils.feature.BehaviorDemo;
 import com.mayhub.utils.feature.ScrollingActivity;
+import com.mayhub.utils.service.PlayerService;
 import com.mayhub.utils.test.TestHeadFootAdapter;
 import com.mayhub.utils.test.TestInfiniteAdapter;
 import com.mayhub.utils.volley.RequestListener;
@@ -204,7 +205,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         Log.e("UNICODE",c + " = " + h + " b = " + b);
         TextUtil.test();
 //        printDuartion();
-        startActivity(new Intent(this, Main2ActivityProcess1.class));
+//        startActivity(new Intent(this, Main2ActivityProcess1.class));
+        PlayerService.startPlayerService(this);
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();

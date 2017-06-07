@@ -132,17 +132,25 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
         view.getGlobalVisibleRect(rect);
         if(rect.contains((int)rawX,(int)rawY)){
             Layout layout = view.getLayout();
+            int textLen = view.getText().toString().length();
             if(layout != null && !TextUtils.isEmpty(view.getText().toString().trim())) {
                 int line = layout.getLineForVertical((int) (rawY - rect.top - view.getPaddingTop()));
                 int offset = layout.getOffsetForHorizontal(line, rawX - rect.left - view.getPaddingLeft());
-                showSelectionArea(view, offset, offset + 5);
-                primaryHori = layout.getPrimaryHorizontal(startLast) + rect.left + view.getPaddingLeft();
-                secondaryHori = layout.getPrimaryHorizontal(endLast) + rect.left + view.getPaddingLeft();
-                if(offset >= 0) {
-                    int top = rect.top + view.getPaddingTop() + ((line + 1) * lineHeight);
-                    showDragger(true, (int) primaryHori, top);
-                    showDragger(false, (int) secondaryHori, top);
-                    layoutOptionByCenter((int) ((primaryHori + secondaryHori) / 2), top - lineHeight);
+                if(offset <= textLen) {
+                    if(offset + 5 > textLen){
+                        offset = textLen - 5;
+                    }
+                    showSelectionArea(view, offset, offset + 5);
+                    primaryHori = layout.getPrimaryHorizontal(startLast) + rect.left + view.getPaddingLeft();
+                    secondaryHori = layout.getPrimaryHorizontal(endLast) + rect.left + view.getPaddingLeft();
+                    if (offset >= 0) {
+                        int top = rect.top + view.getPaddingTop() + ((line + 1) * lineHeight);
+                        showDragger(true, (int) primaryHori, top);
+                        showDragger(false, (int) secondaryHori, top);
+                        layoutOptionByCenter((int) ((primaryHori + secondaryHori) / 2), top - lineHeight);
+                    }
+                }else{
+                    dismissLoading();
                 }
             }
         }

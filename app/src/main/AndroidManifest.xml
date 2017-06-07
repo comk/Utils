@@ -19,7 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".LoginActivity"
+            android:name=".TestTabActivity"
             android:hardwareAccelerated="true"
             android:label="@string/title_activity_login">
             <intent-filter>
@@ -33,6 +33,7 @@
             android:label="@string/title_activity_settings" />
 
         <service android:name=".service.DialogService" />
+        <service android:name=".service.PlayerService" />
 
         <activity android:name=".feature.BehaviorDemo" />
         <activity android:name=".MainActivity" />
@@ -53,6 +54,15 @@
             android:name=".feature.ScrollingActivity"
             android:label="@string/title_activity_scrolling"
             android:theme="@style/AppTheme"></activity>
+        <receiver android:name=".service.PlayerReceiver" >
+            <intent-filter >
+                <action android:name="com.mayhub.jlpt.action.pause"/>
+                <action android:name="com.mayhub.jlpt.play"/>
+                <action android:name="com.mayhub.jlpt.prev"/>
+                <action android:name="com.mayhub.jlpt.next"/>
+                <action android:name="com.mayhub.jlpt.stop.service"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
