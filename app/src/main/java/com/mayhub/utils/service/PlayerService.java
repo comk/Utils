@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.IBinder;
@@ -42,9 +43,15 @@ public class PlayerService extends Service {
     private boolean mStarted;
     private NotificationCompat.Builder mNotificationBuilder;
 
-    public static void startPlayerService(Activity activity){
-        Intent intent = new Intent(activity, PlayerService.class);
-        activity.startService(intent);
+    public static void startPlayerService(Context context){
+        Intent intent = new Intent(context, PlayerService.class);
+        context.startService(intent);
+    }
+
+    public static void stopPlayerService(Context context){
+        Intent intent = new Intent(context, PlayerService.class);
+        intent.setAction(ACTION_STOP_SERVICE);
+        context.startService(intent);
     }
 
     @Nullable
@@ -95,6 +102,11 @@ public class PlayerService extends Service {
                 break;
             case ACTION_PREV:
                 MLogUtil.e("Action","ACTION_PREV");
+                break;
+            case ACTION_STOP_SERVICE:
+                MLogUtil.e("Action","ACTION_STOP_SERVICE");
+                stopNotification();
+                stopSelf();
                 break;
             default:
         }
@@ -318,8 +330,8 @@ public class PlayerService extends Service {
         if (!mStarted) {
 
             // The notification must be updated after setting started to true
-            Notification notification = createNotification();
-//            Notification notification = buildJBNotification();
+//            Notification notification = createNotification();
+            Notification notification = buildJBNotification();
             if (notification != null) {
                 startForeground(NOTIFICATION_ID, notification);
                 mStarted = true;

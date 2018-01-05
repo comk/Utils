@@ -26,7 +26,12 @@ public class PlayerReceiver extends BroadcastReceiver {
             case PlayerService.ACTION_PREV:
                 MLogUtil.e("Action","ACTION_PREV");
                 break;
+            case PlayerService.ACTION_STOP_SERVICE:
+                MLogUtil.e("Action","ACTION_STOP_SERVICE");
+                PlayerService.stopPlayerService(context);
+                break;
             default:
+                break;
         }
     }
 }

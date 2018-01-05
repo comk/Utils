@@ -7,6 +7,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.text.Layout;
+import android.text.Selection;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
@@ -134,17 +135,17 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
             Layout layout = view.getLayout();
             int textLen = view.getText().toString().length();
             if(layout != null && !TextUtils.isEmpty(view.getText().toString().trim())) {
-                int line = layout.getLineForVertical((int) (rawY - rect.top - view.getPaddingTop()));
-                int offset = layout.getOffsetForHorizontal(line, rawX - rect.left - view.getPaddingLeft());
+                int line = layout.getLineForVertical((int) (rawY - rect.top - view.getTotalPaddingTop()));
+                int offset = layout.getOffsetForHorizontal(line, rawX - rect.left - view.getTotalPaddingLeft());
                 if(offset <= textLen) {
                     if(offset + 5 > textLen){
                         offset = textLen - 5;
                     }
                     showSelectionArea(view, offset, offset + 5);
-                    primaryHori = layout.getPrimaryHorizontal(startLast) + rect.left + view.getPaddingLeft();
-                    secondaryHori = layout.getPrimaryHorizontal(endLast) + rect.left + view.getPaddingLeft();
+                    primaryHori = layout.getPrimaryHorizontal(startLast) + rect.left + view.getTotalPaddingLeft();
+                    secondaryHori = layout.getPrimaryHorizontal(endLast) + rect.left + view.getTotalPaddingLeft();
                     if (offset >= 0) {
-                        int top = rect.top + view.getPaddingTop() + ((line + 1) * lineHeight);
+                        int top = rect.top + view.getTotalPaddingTop() + ((line + 1) * lineHeight);
                         showDragger(true, (int) primaryHori, top);
                         showDragger(false, (int) secondaryHori, top);
                         layoutOptionByCenter((int) ((primaryHori + secondaryHori) / 2), top - lineHeight);
@@ -162,10 +163,10 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
         if(rect.contains((int)rawX,(int)rawY)){
             Layout layout = view.getLayout();
             if(layout != null && !TextUtils.isEmpty(view.getText().toString().trim())) {
-                int line = layout.getLineForVertical((int) (rawY - rect.top - view.getPaddingTop()));
-                int offset = layout.getOffsetForHorizontal(line, rawX - rect.left - view.getPaddingLeft());
+                int line = layout.getLineForVertical((int) (rawY - rect.top - view.getTotalPaddingTop()));
+                int offset = layout.getOffsetForHorizontal(line, rawX - rect.left - view.getTotalPaddingLeft());
                 if(offset >= 0) {
-                    int top = rect.top + view.getPaddingTop() + ((line + 1) * lineHeight);
+                    int top = rect.top + view.getTotalPaddingTop() + ((line + 1) * lineHeight);
                     if(isStart){
                         if(stateReverse){
                             if(offset < startLast) {
@@ -223,24 +224,24 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
         if(tvSelection != null) {
             Layout layout = tvSelection.getLayout();
             if (layout != null && !TextUtils.isEmpty(tvSelection.getText().toString().trim())) {
-                int line = layout.getLineForVertical((int) (rawY - rect.top - tvSelection.getPaddingTop()));
-                int top2 = rect.top + tvSelection.getPaddingTop() + ((line + 1) * lineHeight);
+                int line = layout.getLineForVertical((int) (rawY - rect.top - tvSelection.getTotalPaddingTop()));
+                int top2 = rect.top + tvSelection.getTotalPaddingTop() + ((line + 1) * lineHeight);
                 if(stateReverse){
                     if(isStart){
-                        secondaryHori = layout.getPrimaryHorizontal(endLast) + rect.left + tvSelection.getPaddingLeft();
+                        secondaryHori = layout.getPrimaryHorizontal(endLast) + rect.left + tvSelection.getTotalPaddingLeft();
                         showDragger(true, (int) secondaryHori, top2);
                     }else{
-                        secondaryHori = layout.getPrimaryHorizontal(startLast) + rect.left + tvSelection.getPaddingLeft();
+                        secondaryHori = layout.getPrimaryHorizontal(startLast) + rect.left + tvSelection.getTotalPaddingLeft();
                         showDragger(false, (int) secondaryHori, top2);
                     }
                     exchangeViewPos();
                     stateReverse = false;
                 }else {
                     if(isStart){
-                        secondaryHori = layout.getPrimaryHorizontal(startLast) + rect.left + tvSelection.getPaddingLeft();
+                        secondaryHori = layout.getPrimaryHorizontal(startLast) + rect.left + tvSelection.getTotalPaddingLeft();
                         showDragger(true, (int) secondaryHori, top2);
                     }else {
-                        secondaryHori = layout.getPrimaryHorizontal(endLast) + rect.left + tvSelection.getPaddingLeft();
+                        secondaryHori = layout.getPrimaryHorizontal(endLast) + rect.left + tvSelection.getTotalPaddingLeft();
                         showDragger(false, (int) secondaryHori, top2);
                     }
                 }
@@ -309,9 +310,10 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
         startLast = Math.max(start, 0);
         endLast = Math.min(end, tv.getText().length());
         Spannable spanText = getSpanText(tv);
-        spanText.removeSpan(SELECTION_START);
-        spanText.setSpan(SELECTION_START, start, end,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        Selection.setSelection(spanText, start, end);
+//        spanText.removeSpan(SELECTION_START);
+//        spanText.setSpan(SELECTION_START, start, end,
+//                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         tv.setText(spanText, TextView.BufferType.SPANNABLE);
     }
 
@@ -405,11 +407,11 @@ public class SelectionViewUtils implements View.OnClickListener, CusFrameLayout.
                 if(tvSelection != null) {
                     showSelectionArea(tvSelection, 0, tvSelection.getText().length());
                     Layout layout = tvSelection.getLayout();
-                    int line = layout.getLineForVertical(0 - tvSelection.getPaddingTop());
-                    int top2 = rect.top + tvSelection.getPaddingTop() + ((line + 1) * lineHeight);
-                    secondaryHori = layout.getPrimaryHorizontal(startLast) + rect.left + tvSelection.getPaddingLeft();
+                    int line = layout.getLineForVertical(0 - tvSelection.getTotalPaddingTop());
+                    int top2 = rect.top + tvSelection.getTotalPaddingTop() + ((line + 1) * lineHeight);
+                    secondaryHori = layout.getPrimaryHorizontal(startLast) + rect.left + tvSelection.getTotalPaddingLeft();
                     showDragger(true, (int) secondaryHori, top2);
-                    secondaryHori = layout.getPrimaryHorizontal(endLast) + rect.left + tvSelection.getPaddingLeft();
+                    secondaryHori = layout.getPrimaryHorizontal(endLast) + rect.left + tvSelection.getTotalPaddingLeft();
                     showDragger(false, (int) secondaryHori, rect.bottom);
                 }
                 break;

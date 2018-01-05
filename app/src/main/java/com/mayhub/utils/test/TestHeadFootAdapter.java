@@ -69,25 +69,29 @@ public class TestHeadFootAdapter extends LoadMoreRecyclerAdapter {
     public void onBindChildViewHolder(RecyclerView.ViewHolder holder, int position) {
         if(holder instanceof ChildViewHolder){
             SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
-            spannableStringBuilder.append(datas.get(position));
+            spannableStringBuilder.append(text);
             int startPos = 0;
             int endPos = text.length();
             spannableStringBuilder.setSpan(new CusClickSpan(startPos, endPos, position), startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            spannableStringBuilder.setSpan(new ForegroundColorSpan(Color.BLACK), startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannableStringBuilder.setSpan(new ForegroundColorSpan(Color.BLUE), startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             startPos += text.length();
             endPos += text2.length();
+            spannableStringBuilder.append(text2);
             spannableStringBuilder.setSpan(new CusClickSpan(startPos, endPos, position), startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            spannableStringBuilder.setSpan(new ForegroundColorSpan(Color.BLACK), startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannableStringBuilder.setSpan(new ForegroundColorSpan(Color.LTGRAY), startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             startPos += text2.length();
             endPos += text3.length();
+            spannableStringBuilder.append(text3);
             spannableStringBuilder.setSpan(new CusClickSpan(startPos, endPos, position), startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            spannableStringBuilder.setSpan(new ForegroundColorSpan(Color.BLACK), startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannableStringBuilder.setSpan(new ForegroundColorSpan(Color.GREEN), startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             startPos += text3.length();
             endPos += text4.length();
+            spannableStringBuilder.append(text4);
             spannableStringBuilder.setSpan(new CusClickSpan(startPos, endPos, position), startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            spannableStringBuilder.setSpan(new ForegroundColorSpan(Color.BLACK), startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spannableStringBuilder.setSpan(new ForegroundColorSpan(Color.MAGENTA), startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             startPos += text4.length();
             endPos += text5.length();
+            spannableStringBuilder.append(text5);
             spannableStringBuilder.setSpan(new CusClickSpan(startPos, endPos, position), startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             spannableStringBuilder.setSpan(new ForegroundColorSpan(Color.BLACK), startPos, endPos, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             ((ChildViewHolder) holder).tvChild.setText(spannableStringBuilder);
@@ -127,9 +131,18 @@ public class TestHeadFootAdapter extends LoadMoreRecyclerAdapter {
 
         public TextView tvChild;
 
+        public TextView tvDelete;
+
         public ChildViewHolder(View itemView) {
             super(itemView);
             tvChild = (TextView) itemView.findViewById(R.id.tv_child);
+            tvDelete = (TextView) itemView.findViewById(R.id.tv_delete);
+            tvDelete.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d("onClick()", " called with: " + "v = [" + v + "]");
+                }
+            });
             tvChild.setMovementMethod(LinkMovementMethod.getInstance());
         }
     }

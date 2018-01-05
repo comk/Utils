@@ -24,7 +24,10 @@
         android:layout_height="100dp"
         android:background="@android:color/darker_gray"
         />
-
+    <com.mayhub.utils.widget.RecorderView
+        android:id="@+id/recordView"
+        android:layout_width="match_parent"
+        android:layout_height="100dp" />
         <LinearLayout
             android:id="@+id/email_login_form"
             android:layout_width="match_parent"

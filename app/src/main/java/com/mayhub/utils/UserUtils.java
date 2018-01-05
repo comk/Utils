@@ -1,9 +1,17 @@
 package com.mayhub.utils;
 
+import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.support.annotation.Nullable;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
 import com.android.volley.VolleyError;
+import com.mayhub.utils.activity.App;
 import com.mayhub.utils.common.MLogUtil;
 import com.mayhub.utils.volley.IRequest;
 import com.mayhub.utils.volley.RequestListener;
@@ -11,6 +19,7 @@ import com.mayhub.utils.volley.RequestParams;
 
 import org.json.JSONObject;
 
+import java.security.Permission;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +27,51 @@ import java.util.Map;
  * Created by Administrator on 2016/9/30.
  */
 public class UserUtils {
+
+    public static void registerPhoneReceiver(){
+        PhoneReceiver phoneReceiver = new PhoneReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("android.intent.action.PHONE_STATE");
+        intentFilter.addAction("android.intent.action.NEW_OUTGOING_CALL");
+        App.getInstance().registerReceiver(phoneReceiver, intentFilter);
+    }
+
+    public static void unregisterPhoneReceiver(BroadcastReceiver receiver){
+        App.getInstance().unregisterReceiver(receiver);
+    }
+
+    public static class PhoneReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction().equals(Intent.ACTION_NEW_OUTGOING_CALL)){
+                //去电 暂停播放
+
+            }else{
+                //来电
+                TelephonyManager manager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                manager.listen(stateListener, PhoneStateListener.LISTEN_CALL_STATE);
+            }
+        }
+
+        PhoneStateListener stateListener = new PhoneStateListener(){
+
+            public void onCallStateChanged(int state, String incomingNumber) {
+                super.onCallStateChanged(state, incomingNumber);
+                switch(state){
+                    case TelephonyManager.CALL_STATE_IDLE:
+                        //挂断 继续播放
+
+                        break;
+                    case TelephonyManager.CALL_STATE_OFFHOOK://接听
+                    case TelephonyManager.CALL_STATE_RINGING://响铃
+                        //暂停播放
+
+                        break;
+                    }
+                }
+            };
+    }
 
     private static UserUtils instance;
 

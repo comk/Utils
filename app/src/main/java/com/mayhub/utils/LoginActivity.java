@@ -3,8 +3,12 @@ package com.mayhub.utils;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.ActivityManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.os.Environment;
 import android.os.Process;
@@ -27,6 +31,7 @@ import android.provider.ContactsContract;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -46,6 +51,7 @@ import android.widget.TextView;
 
 import com.android.volley.VolleyError;
 import com.mayhub.utils.adapter.BasePagerAdapter;
+import com.mayhub.utils.common.AlertUtils;
 import com.mayhub.utils.common.FileUtils;
 import com.mayhub.utils.common.MLogUtil;
 import com.mayhub.utils.common.PopViewUtils;
@@ -66,6 +72,7 @@ import com.mayhub.utils.volley.RequestListener;
 import com.mayhub.utils.volley.RequestParams;
 import com.mayhub.utils.widget.CusViewPager;
 import com.mayhub.utils.widget.LabelImageView;
+import com.mayhub.utils.widget.RecorderView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -130,6 +137,45 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     };
 
+    String str = "-C\n" +
+            "\n" +
+            "\n" +
+            "urutora.si- ウルトラ・シー\n" +
+            "\n" +
+            "〈体操〉超高难动作chāogāonán dòngzuò;最佳zuìjiā.\n" +
+            "\n" +
+            "\n" +
+            "\n" +
+            "\n" +
+            "\n" +
+            "-いじり\n" +
+            "\n" +
+            "\n" +
+            "-ijiri ‐いじり\n" +
+            "\n" +
+            "摆弄bǎinòng,鼓捣gǔdao『方』,玩弄wánnòng;胡乱húluàn〔任意rènyì〕 改动gǎidòng.\n" +
+            "\n" +
+            "$庭いじり／摆弄庭园（中的花木等）.\n" +
+            "\n" +
+            "$機構いじり／随意改动组织机构jīgòu.\n" +
+            "\n" +
+            "\n" +
+            "\n" +
+            "\n" +
+            "\n" +
+            "-がかる\n" +
+            "\n" +
+            "\n" +
+            "-gakaru ‐がかる\n" +
+            "\n" +
+            "（1）〔…のようである〕类似lèisì,仿效fǎngxiào,带有dàiyǒu……的样子de yàngzi.\n" +
+            "\n" +
+            "$芝居がかった動作／仿佛fǎngfú做戏的动作; 矫揉jiǎo róu造作的动作.\n" +
+            "\n" +
+            "（2）〔…おびる〕稍带shāodài,带点dàidiǎn.\n" +
+            "\n" +
+            "$紫がかった雲／带点紫色的云彩.\n";
+
     /**
      * Id to identity READ_CONTACTS permission request.
      */
@@ -163,11 +209,91 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private int volleyError = 0;
     private ImageViewerDialog imageViewerDialog;
     private ImageViewerUtils imageViewerUtils;
+    private RecorderView recorderView;
 
     private void printDuartion(){
         for (int i = 0; i < startTimes.length; i++) {
             Log.e(TAG, "" + (startTimes[i + 1] - startTimes[i]));
         }
+    }
+
+    private void parseExtension(String detail){
+        if(detail.contains("★") || //
+                detail.contains("") ||
+                detail.contains("")){
+
+        }
+    }
+
+    private void parseProperty(String detail){
+        if(detail.startsWith("Ⅰ") ||
+                detail.startsWith("Ⅱ") ||
+                detail.startsWith("Ⅲ") ||
+                detail.startsWith("Ⅳ")){
+
+        }else{
+            parseExplain(detail);
+        }
+    }
+
+    private void parseExplain(String detail){
+        if(detail.startsWith("（1）") ||
+                detail.startsWith("（2）") ||
+                detail.startsWith("（3）") ||
+                detail.startsWith("（4）") ||
+                detail.startsWith("（5）") ||
+                detail.startsWith("（6）") ||
+                detail.startsWith("（7）") ||
+                detail.startsWith("（8）") ||
+                detail.startsWith("（9）")){
+
+        }else{
+            parseExplain(detail);
+        }
+    }
+
+    private String breaker = "\n\n";
+    private String level_1 = "";
+    private void parseOneWord(String wordStr){
+        String[] arr = wordStr.split("\n\n\n");
+        String word = arr[0];
+        String detail = arr[1];
+        int breakIndex = detail.indexOf(breaker);
+        String pron = detail.substring(0, breakIndex);
+        detail = detail.substring(breakIndex + breaker.length());
+        String nextLine;
+        while (detail.contains(breaker)){
+            breakIndex = detail.indexOf(breaker);
+            nextLine = detail.substring(breakIndex + breaker.length());
+            if(nextLine.startsWith("Ⅰ") || nextLine.startsWith("（1）")){
+
+            }
+        }
+        Log.e("detail", detail);
+    }
+
+
+    private String start = "★Ⅰ（1）《";
+
+
+    private void getTopActivityWindow(){
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+
+                    ComponentName cn = am.getRunningTasks(1).get(0).topActivity;
+                    MLogUtil.e("TOP", cn.toString());
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
     }
 
     @Override
@@ -176,6 +302,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
         setContentView(R.layout.activity_login);
         labelImageView = (LabelImageView) findViewById(R.id.label_img);
+        recorderView = (RecorderView) findViewById(R.id.recordView);
+        recorderView.startRecord();
+        recorderView.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                recorderView.stopRecord();
+            }
+        });
         labelImageView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -199,6 +333,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             }
         });
+
+        getTopActivityWindow();
+
+        int k = (int) System.currentTimeMillis();
+        Log.e("k", "k = " + k);
         char c = '好';
         char b = 0x4e00;
         int h = c;
@@ -226,6 +365,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     textView.setTextSize(40);
                     textView.setText("4651616161");
                     textView.setBackgroundColor(Color.RED);
+                    AlertUtils.getInstance().showAlert(LoginActivity.this, false,
+                            new String[]{"content 1", "content 2\nline2\nline3\nline4", "content 3", "content 4"},
+                            new String[]{"next", "next", "next", "done"});
 //                    PopViewUtils.getInstance().initPopContent(LoginActivity.this, true, new String[]{
 //                            "TOM","JACK","LUCY","BOB"
 //                    }).setAnimationDir(PopViewUtils.DIR_FROM_LEFT).at(v, Gravity.RIGHT, Gravity.CENTER);
@@ -334,7 +476,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 return false;
             }
         });
-
+        setSwipe();
 
         Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
@@ -374,6 +516,54 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mProgressView = findViewById(R.id.login_progress);
     }
+
+    ItemTouchHelper itemTouchHelper;
+    private void setSwipe(){
+        ItemTouchHelper.Callback mCallback = new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.RIGHT) {
+            /**
+             * @param recyclerView
+             * @param viewHolder 拖动的ViewHolder
+             * @param target 目标位置的ViewHolder
+             * @return
+             */
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                int fromPosition = viewHolder.getAdapterPosition();//得到拖动ViewHolder的position
+                int toPosition = target.getAdapterPosition();//得到目标ViewHolder的position
+
+                return true;
+            }
+
+            @Override
+            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                Log.d(TAG, "onChildDraw dX = [" + dX + "], dY = [" + dY + "], actionState = [" + actionState + "], isCurrentlyActive = [" + isCurrentlyActive + "]");
+                if(viewHolder instanceof TestHeadFootAdapter.ChildViewHolder) {
+                    if (dX > 200) {
+                        ((TestHeadFootAdapter.ChildViewHolder) viewHolder).tvChild.setTranslationX(200);
+                    } else {
+                        ((TestHeadFootAdapter.ChildViewHolder) viewHolder).tvChild.setTranslationX(dX);
+                    }
+                }
+            }
+
+            @Override
+            public void onChildDrawOver(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                Log.d(TAG, "onChildDrawOver dX = [" + dX + "], dY = [" + dY + "], actionState = [" + actionState + "], isCurrentlyActive = [" + isCurrentlyActive + "]");
+                super.onChildDrawOver(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                Log.d(TAG, "onSwiped() called with: " + "viewHolder = [" + viewHolder + "], direction = [" + direction + "]");
+            }
+
+
+
+        };
+        itemTouchHelper = new ItemTouchHelper(mCallback);
+        itemTouchHelper.attachToRecyclerView(recyclerView);
+    }
+
     int[] resIds = new int[]{R.drawable.exo_controls_fastforward, R.drawable.exo_controls_next, R.drawable.exo_controls_pause, R.drawable.exo_controls_previous, R.drawable.exo_controls_play};
     private void showImageViewer(ImageView imageView){
 //        if(imageViewerDialog == null){

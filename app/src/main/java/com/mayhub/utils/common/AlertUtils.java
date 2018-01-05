@@ -11,6 +11,10 @@ import android.widget.TextView;
 
 import com.mayhub.utils.R;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by comkdai on 2017/3/23.
  */
@@ -130,6 +134,42 @@ public class AlertUtils implements View.OnClickListener, Animator.AnimatorListen
         }
     }
 
+    private int showIndex = 0;
+    private List<String> messages;
+    private List<String> btnTxts;
+
+    public void showAlert(Context context, boolean isCancelable, String[] messages, String[] btnTxts){
+        showAlert(context, isCancelable, Arrays.asList(messages), Arrays.asList(btnTxts));
+    }
+
+    public void showAlert(Context context, boolean isCancelable, List<String> messages, List<String> btnTxts){
+        synchronized (AlertUtils.class) {
+            if(isAnimating && isShowing()){
+                return;
+            }
+            if (context instanceof Activity) {
+                showIndex = 0;
+                this.messages = messages;
+                this.btnTxts = btnTxts;
+                Activity activity = (Activity) context;
+                ViewGroup viewGroup = (ViewGroup) activity.getWindow().getDecorView();
+                viewRoot = View.inflate(context, R.layout.layout_alert, null);
+                tvMessage = (TextView) viewRoot.findViewById(R.id.tv_message);
+                tvLeft = (TextView) viewRoot.findViewById(R.id.tv_option_left);
+                tvRight = (TextView) viewRoot.findViewById(R.id.tv_option_right);
+                this.isCancelable = isCancelable;
+                tvMessage.setText(messages.get(showIndex));
+                tvLeft.setText(btnTxts.get(showIndex));
+                tvRight.setVisibility(View.GONE);
+                viewRoot.setAlpha(0f);
+                viewRoot.setOnClickListener(this);
+                tvLeft.setOnClickListener(this);
+                viewGroup.addView(viewRoot);
+                viewRoot.animate().setDuration(DEFAULT_DURATION).setListener(this).alphaBy(1).start();
+            }
+        }
+    }
+
     public AlertUtils listener(AlertListener alertListener){
         listener = alertListener;
         return this;
@@ -159,6 +199,7 @@ public class AlertUtils implements View.OnClickListener, Animator.AnimatorListen
             tvMessage = null;
             tvRight = null;
             tvLeft = null;
+            showIndex = 0;
             instance = null;
             listener = null;
         }
@@ -196,13 +237,23 @@ public class AlertUtils implements View.OnClickListener, Animator.AnimatorListen
                 }
                 break;
             case R.id.tv_option_left:
-                dismissLoading();
                 if(listener != null){
                     if(tvRight.getVisibility() == View.VISIBLE) {
                         listener.onBtnLeftClick();
                     }else {
-                        listener.onBtnClick();
+                        if(messages == null || messages.size() == showIndex + 1) {
+                            listener.onBtnClick();
+                        }
                     }
+                }
+                if(messages == null || messages.size() == showIndex + 1) {
+                    dismissLoading();
+                }else{
+                    showIndex ++;
+                    tvMessage.setText(messages.get(showIndex));
+                    tvMessage.setTranslationX(-200);
+                    tvMessage.animate().setDuration(400).translationXBy(200).start();
+                    tvLeft.setText(btnTxts.get(showIndex));
                 }
                 break;
             case R.id.tv_option_right:
