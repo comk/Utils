@@ -63,6 +63,7 @@ import com.mayhub.utils.download.DownloadListener;
 import com.mayhub.utils.download.DownloadTask;
 import com.mayhub.utils.download.FileDownloaderManager;
 import com.mayhub.utils.download.MultiDownloadTask;
+import com.mayhub.utils.encrypt.AESEncrypt;
 import com.mayhub.utils.feature.BehaviorDemo;
 import com.mayhub.utils.feature.ScrollingActivity;
 import com.mayhub.utils.service.PlayerService;
@@ -88,10 +89,12 @@ import java.io.SequenceInputStream;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -335,7 +338,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         });
 
         getTopActivityWindow();
-
+        try {
+            testEncrypt();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         int k = (int) System.currentTimeMillis();
         Log.e("k", "k = " + k);
         char c = '好';
@@ -516,6 +523,20 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mProgressView = findViewById(R.id.login_progress);
     }
+
+
+    public void testEncrypt() throws Exception{
+        String ivStr = "1234567812345678";
+        String keyStr = "1234567812345678";
+//        String content = "Test String加上中文试试。。。嘿嘿  nice";
+        String content = "纯中文试试";
+//        String content = "english only ... and some symbol inside this line .";
+        String encryptedStr = AESEncrypt.encrypt(content, keyStr, ivStr);
+        System.out.println("encrypted : " + encryptedStr);
+        String decryptedStr = AESEncrypt.decrypt(encryptedStr, keyStr, ivStr);
+        System.out.println("decrypted : " + decryptedStr);
+    }
+
 
     ItemTouchHelper itemTouchHelper;
     private void setSwipe(){

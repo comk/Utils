@@ -39,6 +39,7 @@
         <activity android:name=".feature.BehaviorDemo" />
         <activity android:name=".MainActivity" />
         <activity android:name=".TestPermissionActivity" />
+        <activity android:name=".FlavorActivity" />
         <activity
             android:name=".Main2ActivityProcess1"
             android:multiprocess="true"

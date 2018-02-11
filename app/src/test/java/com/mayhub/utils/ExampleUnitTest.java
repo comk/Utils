@@ -2,29 +2,18 @@ package com.mayhub.utils;
 
 
 import com.mayhub.utils.common.TimeUtils;
+import com.mayhub.utils.encrypt.AESEncrypt;
 
 import org.junit.Test;
-import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Random;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
-
-import io.reactivex.Flowable;
-import io.reactivex.FlowableEmitter;
-import io.reactivex.FlowableOnSubscribe;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Scheduler;
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
-import io.reactivex.functions.Predicate;
-import io.reactivex.internal.operators.flowable.FlowableSamplePublisher;
-import io.reactivex.schedulers.Schedulers;
-
-import static org.junit.Assert.*;
 
 /**
  * To work on unit tests, switch the Test Artifact in the Build Variants view.
@@ -51,6 +40,70 @@ public class ExampleUnitTest {
 
 
 }
+
+    @Test
+    public void testEncrypt() throws Exception{
+        String ivStr = "1234567812345678";
+        String keyStr = "1234567812345678";
+        String content = "Test String";
+        String encryptedStr = AESEncrypt.encrypt(content, keyStr, ivStr);
+        System.out.println("encrypted : " + encryptedStr);
+        String decryptedStr = AESEncrypt.decrypt(encryptedStr, keyStr, ivStr);
+        System.out.println("decrypted : " + decryptedStr);
+    }
+
+    @Test
+    public void stringTest(){
+        String currentVer = "2.0-debug-release";
+        String ver1 = "2.0.0-debug-release";
+        String ver2 = "2.0.1-debug-release";
+
+        if(currentVer.compareTo(ver1) >= 0){
+            System.out.println("currentVer >= ver1");
+        }
+        if(currentVer.compareTo(ver2) <= 0){
+            System.out.println("currentVer <= ver2");
+        }
+    }
+
+
+    @Test
+    public void timeTest() throws Exception{
+//        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//        System.out.println(sdf.format(date));
+//        System.out.println(sdf.getTimeZone().getID());
+//        sdf.setTimeZone(TimeZone.getTimeZone("GMT-8:00"));
+//        System.out.println(sdf.format(date));
+//        System.out.println(sdf.getTimeZone().getID());
+//        sdf.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
+//        System.out.println(sdf.format(date));
+//        System.out.println(sdf.getTimeZone().getID());
+//
+//        System.out.println(Calendar.getInstance().getTimeZone().getRawOffset());
+//        System.out.println((1000 * 60 * 60));
+//        System.out.println(Calendar.getInstance().getTimeZone().getRawOffset() / (1000 * 60 * 60));
+//        String s = "======";
+//        concatStr(s);
+//        System.out.println(s);
+
+        SimpleDateFormat sdf1 = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss 'GMT'", Locale.US);
+        Date d = sdf1.parse("Sun, 11 Feb 2018 08:17:26 GMT");
+        System.out.println(d.getTime());
+        System.out.println(d.toString());
+        System.out.println(sdf.format(d));
+    }
+
+    public long getTimeOffset(String serverTime) throws Exception{
+        long inTime = System.currentTimeMillis();
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss 'GMT'", Locale.UK);
+        Date d = sdf.parse(serverTime);
+        return d.getTime() + inTime + Calendar.getInstance().getTimeZone().getRawOffset();
+    }
+
+    private void concatStr(String str){
+        str += "--";
+    }
 
     @Test
     public void hashCodeTest(){

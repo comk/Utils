@@ -15,19 +15,19 @@ public class PlayerReceiver extends BroadcastReceiver {
         final String action = intent.getAction();
         switch (action) {
             case PlayerService.ACTION_PAUSE:
-                MLogUtil.e("Action","ACTION_PAUSE");
+                MLogUtil.e("Action","PlayerReceiver - ACTION_PAUSE");
                 break;
             case PlayerService.ACTION_PLAY:
-                MLogUtil.e("Action","ACTION_PLAY");
+                MLogUtil.e("Action","PlayerReceiver - ACTION_PLAY");
                 break;
             case PlayerService.ACTION_NEXT:
-                MLogUtil.e("Action","ACTION_NEXT");
+                MLogUtil.e("Action","PlayerReceiver - ACTION_NEXT");
                 break;
             case PlayerService.ACTION_PREV:
-                MLogUtil.e("Action","ACTION_PREV");
+                MLogUtil.e("Action","PlayerReceiver - ACTION_PREV");
                 break;
             case PlayerService.ACTION_STOP_SERVICE:
-                MLogUtil.e("Action","ACTION_STOP_SERVICE");
+                MLogUtil.e("Action","PlayerReceiver - ACTION_STOP_SERVICE");
                 PlayerService.stopPlayerService(context);
                 break;
             default:

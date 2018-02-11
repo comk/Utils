@@ -2,11 +2,13 @@ package com.mayhub.utils.service;
 
 import android.app.Activity;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -39,7 +41,7 @@ public class PlayerService extends Service {
     private PendingIntent mPlayIntent;
     private PendingIntent mPreviousIntent;
     private PendingIntent mNextIntent;
-    private int mNotificationColor;
+    private int mNotificationColor = Color.GREEN;
     private boolean mStarted;
     private NotificationCompat.Builder mNotificationBuilder;
 
@@ -92,19 +94,19 @@ public class PlayerService extends Service {
         }
         switch (action) {
             case ACTION_PAUSE:
-                MLogUtil.e("Action","ACTION_PAUSE");
+                MLogUtil.e("Action","PlayerService - ACTION_PAUSE");
                 break;
             case ACTION_PLAY:
-                MLogUtil.e("Action","ACTION_PLAY");
+                MLogUtil.e("Action","PlayerService - ACTION_PLAY");
                 break;
             case ACTION_NEXT:
-                MLogUtil.e("Action","ACTION_NEXT");
+                MLogUtil.e("Action","PlayerService - ACTION_NEXT");
                 break;
             case ACTION_PREV:
-                MLogUtil.e("Action","ACTION_PREV");
+                MLogUtil.e("Action","PlayerService - ACTION_PREV");
                 break;
             case ACTION_STOP_SERVICE:
-                MLogUtil.e("Action","ACTION_STOP_SERVICE");
+                MLogUtil.e("Action","PlayerService - ACTION_STOP_SERVICE");
                 stopNotification();
                 stopSelf();
                 break;
@@ -336,6 +338,16 @@ public class PlayerService extends Service {
                 startForeground(NOTIFICATION_ID, notification);
                 mStarted = true;
             }
+        }else{
+            updateNotification();
+        }
+    }
+
+    public void updateNotification(){
+        if(mStarted){
+            Notification notification = buildJBNotification();
+            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            notificationManager.notify(NOTIFICATION_ID, notification);
         }
     }
 
